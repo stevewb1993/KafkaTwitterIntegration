@@ -1,0 +1,3 @@
+# Project exclude paths
+/kafka-twitter-producer/target/
+/kafka-twitter-producer/src/main/java/app.properties
