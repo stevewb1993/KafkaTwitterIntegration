@@ -1,8 +1,20 @@
 
 package TweetHelper;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Locale;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import jdk.nashorn.internal.parser.JSONParser;
+
 
 public class Tweet implements Serializable
 {
@@ -18,7 +30,7 @@ public class Tweet implements Serializable
     public String idStr;
     @SerializedName("text")
     @Expose
-    public String text;
+    public String tweetText;
     @SerializedName("source")
     @Expose
     public String source;
@@ -42,7 +54,7 @@ public class Tweet implements Serializable
     public Object inReplyToScreenName;
     @SerializedName("user")
     @Expose
-    public TweetHelper.User user;
+    public User user;
     @SerializedName("geo")
     @Expose
     public Object geo;
@@ -57,7 +69,7 @@ public class Tweet implements Serializable
     public Object contributors;
     @SerializedName("retweeted_status")
     @Expose
-    public TweetHelper.RetweetedStatus retweetedStatus;
+    public RetweetedStatus retweetedStatus;
     @SerializedName("is_quote_status")
     @Expose
     public Boolean isQuoteStatus;
@@ -75,7 +87,7 @@ public class Tweet implements Serializable
     public Integer favoriteCount;
     @SerializedName("entities")
     @Expose
-    public TweetHelper.Entities_ entities;
+    public Entities_ entities;
     @SerializedName("favorited")
     @Expose
     public Boolean favorited;
@@ -100,8 +112,6 @@ public class Tweet implements Serializable
      * No args constructor for use in serialization
      * 
      */
-    public Tweet() {
-    }
 
     /**
      * 
@@ -135,12 +145,12 @@ public class Tweet implements Serializable
      * @param favoriteCount
      * @param timestampMs
      */
-    public Tweet(String createdAt, Integer id, String idStr, String text, String source, Boolean truncated, Object inReplyToStatusId, Object inReplyToStatusIdStr, Object inReplyToUserId, Object inReplyToUserIdStr, Object inReplyToScreenName, TweetHelper.User user, Object geo, Object coordinates, Object place, Object contributors, TweetHelper.RetweetedStatus retweetedStatus, Boolean isQuoteStatus, Integer quoteCount, Integer replyCount, Integer retweetCount, Integer favoriteCount, TweetHelper.Entities_ entities, Boolean favorited, Boolean retweeted, Boolean possiblySensitive, String filterLevel, String lang, String timestampMs) {
+    public Tweet(String createdAt, Integer id, String idStr, String text, String source, Boolean truncated, Object inReplyToStatusId, Object inReplyToStatusIdStr, Object inReplyToUserId, Object inReplyToUserIdStr, Object inReplyToScreenName, User user, Object geo, Object coordinates, Object place, Object contributors, RetweetedStatus retweetedStatus, Boolean isQuoteStatus, Integer quoteCount, Integer replyCount, Integer retweetCount, Integer favoriteCount, Entities_ entities, Boolean favorited, Boolean retweeted, Boolean possiblySensitive, String filterLevel, String lang, String timestampMs) {
         super();
         this.createdAt = createdAt;
         this.id = id;
         this.idStr = idStr;
-        this.text = text;
+        this.tweetText = text;
         this.source = source;
         this.truncated = truncated;
         this.inReplyToStatusId = inReplyToStatusId;
@@ -167,5 +177,35 @@ public class Tweet implements Serializable
         this.lang = lang;
         this.timestampMs = timestampMs;
     }
+
+    public int wordCount() {
+        return this.tweetText.split(" ").length;
+    }
+
+    public String formattedDate() throws ParseException {
+
+        String tweetAPIDateFormat = "EEE MMM d HH:mm:ss Z yyyy"; //"E MMMM dd HH:mm:ss zzz yyyy";
+        String shortDateFormat = "yyyy-MM-dd";
+
+        SimpleDateFormat  twitterAPIDateFormatter = new SimpleDateFormat(tweetAPIDateFormat, Locale.ENGLISH);
+        SimpleDateFormat  shortDateFormatter = new SimpleDateFormat(shortDateFormat);
+        try {
+            Date parsedDate = twitterAPIDateFormatter.parse(this.createdAt);
+            //twitterAPIDateFormatter.applyPattern(shortDateFormat);
+            //Date formattedDate = shortDateFormatter.parse(twitterAPIDateFormatter.format(parsedDate));
+            return shortDateFormatter.format(parsedDate);//.format(formattedDate);
+        } catch (ParseException e) {
+            //gets the current date in the correct format if we can't get it from the tweet
+            return shortDateFormatter.format(new Date(System.currentTimeMillis()));
+        }
+    }
+
+
+    public JsonObject serialize() {
+        Gson gson = new Gson();
+        String tweetString = gson.toJson(this);
+        return new JsonParser().parse(tweetString).getAsJsonObject();
+    }
+
 
 }

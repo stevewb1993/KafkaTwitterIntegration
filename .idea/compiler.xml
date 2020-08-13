@@ -8,11 +8,13 @@
         <outputRelativeToContentRoot value="true" />
         <module name="kafka-streams-wordcount" />
         <module name="kafka-twitter-producer" />
+        <module name="TweetHelper" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
       <module name="kafka-connect-twitter" target="1.5" />
       <module name="kafka-twitter-ElasticSearchConsumer" target="8" />
+      <module name="kafka-twitter-producer" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

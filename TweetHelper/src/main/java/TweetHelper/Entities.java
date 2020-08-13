@@ -14,7 +14,7 @@ public class Entities implements Serializable
     public List<Object> hashtags = null;
     @SerializedName("urls")
     @Expose
-    public List<Url> urls = null;
+    public List<TweetHelper.Url> urls = null;
     @SerializedName("user_mentions")
     @Expose
     public List<Object> userMentions = null;
@@ -37,7 +37,7 @@ public class Entities implements Serializable
      * @param userMentions
      * @param symbols
      */
-    public Entities(List<Object> hashtags, List<Url> urls, List<Object> userMentions, List<Object> symbols) {
+    public Entities(List<Object> hashtags, List<TweetHelper.Url> urls, List<Object> userMentions, List<Object> symbols) {
         super();
         this.hashtags = hashtags;
         this.urls = urls;

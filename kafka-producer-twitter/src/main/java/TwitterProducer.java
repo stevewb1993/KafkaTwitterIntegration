@@ -25,15 +25,13 @@ import java.util.concurrent.TimeUnit;
 public class TwitterProducer {
 
     Logger logger = LoggerFactory.getLogger(TwitterProducer.class.getName());
-    List<String> terms = Lists.newArrayList("coronaVirus");
+    List<String> terms = Lists.newArrayList("tory");
     private static JsonParser jsonParser = new JsonParser();
 
     public TwitterProducer(){}
 
     public static void main(String[] args) {
-
         new TwitterProducer().run();
-
     }
 
     public void run(){
@@ -49,7 +47,7 @@ public class TwitterProducer {
         //create kafka producer
         KafkaProducer<String,String> producer = createKafkaProducer();
 
-        String topic = "tweets";
+        String topic = "wordsinput";
         String key = null;
 
         //add a shutdown hook
@@ -80,7 +78,7 @@ public class TwitterProducer {
                 ProducerRecord<String, String > producerRecord = new ProducerRecord<String, String>(topic, key, msg);
                 int followers = extractUserFollowersInTweet(producerRecord.value());
                 System.out.println(followers);
-                if(followers > 10000) {
+                if(followers > 100) {
                     System.out.println("message is sent");
                     producer.send(producerRecord, new Callback() {
                         public void onCompletion(RecordMetadata metadata, Exception exception) {
@@ -111,11 +109,12 @@ public class TwitterProducer {
         try {
             String currentDirectory = System.getProperty("user.dir");
             System.out.println("The current working directory is " + currentDirectory);
-            FileInputStream ip= new FileInputStream("kafka-twitter-producer\\src\\main\\java\\app.properties");
-            properties.load(ip);
+            FileInputStream propertiesFile = new FileInputStream("kafka-producer-twitter\\src\\main\\java\\app.properties");
+            properties.load(propertiesFile);
         }
         catch (Exception e) {
-            System.out.println("couldn't load properties file");
+            System.out.println("Error: couldn't load properties file");
+            System.out.println(e);
             System.exit(1);
         }
 
