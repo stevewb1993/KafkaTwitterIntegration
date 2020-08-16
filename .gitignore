@@ -1,5 +1,6 @@
 # Project exclude paths
-/kafka-twitter-producer/target/
+/kafka-producer-twittertweets/target/
+/kafka-producer-twittertweets/env.list
 /kafka-streams-wordcount/target/
 /TweetHelper/target/
-/kafka-twitter-producer/src/main/java/app.properties
+

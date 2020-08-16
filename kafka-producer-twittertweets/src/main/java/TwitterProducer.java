@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class TwitterProducer {
 
     Logger logger = LoggerFactory.getLogger(TwitterProducer.class.getName());
-    List<String> terms = Lists.newArrayList("tory");
+    List<String> terms = Lists.newArrayList("coronavirus");
     private static JsonParser jsonParser = new JsonParser();
 
     public TwitterProducer(){}
@@ -47,7 +47,7 @@ public class TwitterProducer {
         //create kafka producer
         KafkaProducer<String,String> producer = createKafkaProducer();
 
-        String topic = "wordsinput";
+        String topic = "test-topic";
         String key = null;
 
         //add a shutdown hook
@@ -105,18 +105,21 @@ public class TwitterProducer {
 
     public Client createTwitterClient(BlockingQueue<String> msgQueue, List<String> terms){
 
-        Properties properties = new Properties();
-        try {
-            String currentDirectory = System.getProperty("user.dir");
-            System.out.println("The current working directory is " + currentDirectory);
-            FileInputStream propertiesFile = new FileInputStream("kafka-producer-twitter\\src\\main\\java\\app.properties");
-            properties.load(propertiesFile);
-        }
-        catch (Exception e) {
-            System.out.println("Error: couldn't load properties file");
-            System.out.println(e);
-            System.exit(1);
-        }
+        //Properties properties = new Properties();
+        //try {
+        //    String currentDirectory = System.getProperty("user.dir");
+        //    System.out.println("The current working directory is " + currentDirectory);
+        //    FileInputStream propertiesFile = new FileInputStream("kafka-producer-twittertweets\\src\\main\\java\\app.properties");
+        //    properties.load(propertiesFile);
+        //}
+        //catch (Exception e) {
+        //    System.out.println("Error: couldn't load properties file");
+        //    System.out.println(e);
+        //    System.exit(1);
+        //}
+
+        //properties.setProperty("apiKey", System.getenv("apiKey"));
+        //properties.setProperty("apiKey", System.getenv("apiKey"));
 
 
         /** Declare the host you want to connect to, the endpoint, and authentication (basic auth or oauth) */
@@ -127,7 +130,7 @@ public class TwitterProducer {
         hosebirdEndpoint.trackTerms(terms);
 
         // These secrets should be read from a config file
-        Authentication hosebirdAuth = new OAuth1(properties.getProperty("apiKey"), properties.getProperty("apiSecret"), properties.getProperty("bearerToken"), properties.getProperty("tokenSecret"));
+        Authentication hosebirdAuth = new OAuth1(System.getenv("apiKey"), System.getenv("apiSecret"), System.getenv("bearerToken"), System.getenv("tokenSecret"));
 
         ClientBuilder builder = new ClientBuilder()
                 .name("Hosebird-Client-01")
@@ -147,7 +150,7 @@ public class TwitterProducer {
         //prod properties
         Properties properties = new Properties();
 
-        String bootstrapServers = "127.0.0.1:9092";
+        String bootstrapServers = "35.178.180.144:9092";
         String acksSetting = "1";
 
         properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);

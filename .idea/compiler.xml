@@ -7,14 +7,14 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="kafka-streams-wordcount" />
-        <module name="kafka-twitter-producer" />
         <module name="TweetHelper" />
+        <module name="kafka-producer-twittertweets" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
       <module name="kafka-connect-twitter" target="1.5" />
+      <module name="Kafka-Producer-Twitter" target="1.8" />
       <module name="kafka-twitter-ElasticSearchConsumer" target="8" />
-      <module name="kafka-twitter-producer" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

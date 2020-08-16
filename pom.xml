@@ -14,6 +14,7 @@
         <module>kafka-twitter-producer</module>
         <module>kafka-streams-wordcount</module>
         <module>TweetHelper</module>
+        <module>kafka-producer-twittertweets</module>
     </modules>
 
 
