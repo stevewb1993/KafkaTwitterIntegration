@@ -27,7 +27,7 @@ public class TwitterWordCounter {
         StreamsBuilder builder = new StreamsBuilder();
         // 1 - stream from Kafka
 
-        KStream<String, String> textLines = builder.stream("wordsinput");
+        KStream<String, String> textLines = builder.stream("test-topic");
         KTable<String, Long> wordCounts = textLines
                 // 2 - map values to lowercase
                 .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject(), Tweet.class))
@@ -43,7 +43,7 @@ public class TwitterWordCounter {
                 .count(Materialized.as("Counts"));
 
         // 7 - to in order to write the results back to kafka
-        wordCounts.toStream().to("wordsoutput", Produced.with(Serdes.String(), Serdes.Long()));
+        wordCounts.toStream().to("test-output", Produced.with(Serdes.String(), Serdes.Long()));
 
         return builder.build();
     }
@@ -51,7 +51,7 @@ public class TwitterWordCounter {
     public static void main(String[] args) {
         Properties config = new Properties();
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "wordcount-application10");
-        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
+        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "35.178.180.144:9092");
         //config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());

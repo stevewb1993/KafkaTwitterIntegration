@@ -77,7 +77,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>TwitterWordCountAnalysis</mainClass>
+                            <mainClass>TwitterWordCounter</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
