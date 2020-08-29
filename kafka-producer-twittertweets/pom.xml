@@ -23,6 +23,13 @@
             <version>1.7.30</version>
             <!--            <scope>test</scope>-->
         </dependency>
+        <!-- https://mvnrepository.com/artifact/io.confluent/kafka-streams-json-schema-serde -->
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-streams-json-schema-serde</artifactId>
+            <version>5.5.0</version>
+        </dependency>
+
         <dependency>
             <groupId>com.twitter</groupId>
             <artifactId>hbc-core</artifactId> <!-- or hbc-twitter4j -->

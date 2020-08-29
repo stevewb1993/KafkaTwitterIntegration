@@ -47,7 +47,7 @@ public class TwitterProducer {
         //create kafka producer
         KafkaProducer<String,String> producer = createKafkaProducer();
 
-        String topic = "test-topic";
+        String topic = "test-topic2";
         String key = null;
 
         //add a shutdown hook
