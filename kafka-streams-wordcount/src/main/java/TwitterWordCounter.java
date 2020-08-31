@@ -1,3 +1,8 @@
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import TweetHelper.Tweet;
@@ -6,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import com.google.gson.internal.bind.util.ISO8601Utils;
+import netscape.javascript.JSObject;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.protocol.types.Field;
@@ -19,19 +25,15 @@ import org.apache.kafka.streams.kstream.*;
 
 public class TwitterWordCounter {
 
-    //Create serdes for json
-    Map<String, Object> serdeProps = new HashMap<>();
-
 
     private final JsonParser jsonParser = new JsonParser();
-
 
 
     public Topology createTopology(){
         StreamsBuilder builder = new StreamsBuilder();
 
 
-        KStream<String, String> textLines = builder.stream("test-topic2");
+        KStream<String, String> textLines = builder.stream("raw-twitter");
         KTable<String, Long> wordCounts = textLines
                 //parse each tweet as a tweet object
                 .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject(), Tweet.class))
@@ -51,22 +53,28 @@ public class TwitterWordCounter {
              2. lable the count with 'count' as the column name
          */
         KStream<String, String> wordCountsStructured = wordCounts.toStream()
-                .map((key, value) -> new KeyValue<>(null, MapValuesToIncludeColumnData(key, value))); //key.add("count", new JsonPrimitive(value))));
+                .map((key, value) -> new KeyValue<>(null, addSchemaToKafkaPayload(MapValuesToIncludeColumnData(key, value))));
 
         KStream<String, String> wordCountsPeek = wordCountsStructured.peek(
                 (key, value) -> System.out.println("key: " + key + " value:" + value)
         );
 
-        wordCountsStructured.to("test-output2", Produced.with(Serdes.String(), Serdes.String()));
+
+
+        wordCountsStructured.to("twitter-word-counts", Produced.with(Serdes.String(), Serdes.String()));
 
         return builder.build();
     }
 
     public static void main(String[] args) {
+
+        //String currentDirectory = System.getProperty("user.dir");
+        //System.out.println("The current working directory is " + currentDirectory);
+
         Properties config = new Properties();
-        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "wordcount-application1111");
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafka-streams-word-counter");
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "35.178.180.144:9092");
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        //config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
 
@@ -108,37 +116,29 @@ public class TwitterWordCounter {
         jkey.addProperty("count", countOfWord); //new JsonPrimitive(count));
         return jkey.toString();
     }
-    
 
+    public String addSchemaToKafkaPayload(String payload) {
+        JsonObject fullMessage = new JsonObject();
 
-//    public class JsonSerializer implements Serializer<JsonNode> {
-//        private final ObjectMapper objectMapper = new ObjectMapper();
-//
-//        public JsonSerializer() {
-//            //Nothing to do
-//        }
-//
-//        @Override
-//        public void configure(Map<String, ?> config, boolean isKey) {
-//            //Nothing to Configure
-//        }
-//
-//        @Override
-//        public byte[] serialize(String topic, JsonNode data) {
-//            if (data == null) {
-//                return null;
-//            }
-//            try {
-//                return objectMapper.writeValueAsBytes(data);
-//            } catch (JsonProcessingException e) {
-//                throw new SerializationException("Error serializing JSON message", e);
-//            }
-//        }
-//
-//        @Override
-//        public void close() {
-//
-//        }
-//    }
+        //add payload
+        JsonObject jPayload = jsonParser.parse(payload).getAsJsonObject();
+        fullMessage.add("payload", jPayload);
+
+        //add schema
+        try {
+            fullMessage.add("schema", jsonParser.parse(readFile("kafka-streams-wordcount//schema.txt", StandardCharsets.UTF_8)).getAsJsonObject());
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        }
+
+        return fullMessage.toString();
+    }
+
+    static String readFile(String path, Charset encoding) throws IOException
+    {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
+    }
 
 }

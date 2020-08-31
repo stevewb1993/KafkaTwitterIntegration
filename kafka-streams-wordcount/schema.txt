@@ -1,0 +1,8 @@
+{
+    "type": "struct", "optional": false, "version": 1, "fields":
+    [
+        { "field": "date", "type": "string", "optional": true },
+        { "field": "word", "type": "string", "optional": true },
+        { "field": "count", "type": "int64", "optional": true }
+    ]
+}

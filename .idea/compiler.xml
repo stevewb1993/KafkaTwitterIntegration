@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="kafka-streams-wordcount" />
+        <module name="kafka-streams-sentiment" />
         <module name="TweetHelper" />
         <module name="kafka-producer-twittertweets" />
       </profile>

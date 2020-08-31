@@ -16,6 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -47,7 +50,7 @@ public class TwitterProducer {
         //create kafka producer
         KafkaProducer<String,String> producer = createKafkaProducer();
 
-        String topic = "test-topic2";
+        String topic = "raw-twitter";
         String key = null;
 
         //add a shutdown hook
@@ -103,7 +106,7 @@ public class TwitterProducer {
 
     }
 
-    public Client createTwitterClient(BlockingQueue<String> msgQueue, List<String> terms){
+    public Client createTwitterClient(BlockingQueue<String> msgQueue, List<String> terms) {
 
         //Properties properties = new Properties();
         //try {
@@ -130,6 +133,10 @@ public class TwitterProducer {
         hosebirdEndpoint.trackTerms(terms);
 
         // These secrets should be read from a config file
+        System.out.println(System.getenv("apiKey"));
+        System.out.println(System.getenv("apiSecret"));
+        System.out.println(System.getenv("bearerToken"));
+        System.out.println(System.getenv("tokenSecret"));
         Authentication hosebirdAuth = new OAuth1(System.getenv("apiKey"), System.getenv("apiSecret"), System.getenv("bearerToken"), System.getenv("tokenSecret"));
 
         ClientBuilder builder = new ClientBuilder()
@@ -142,7 +149,6 @@ public class TwitterProducer {
         Client hosebirdClient = builder.build();
 
         return hosebirdClient;
-
 
     }
 
@@ -186,6 +192,5 @@ public class TwitterProducer {
             return 0;
         }
     }
-
 
 }
