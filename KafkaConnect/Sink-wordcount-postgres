@@ -1,0 +1,15 @@
+connector.class=io.confluent.connect.jdbc.JdbcSinkConnector
+connection.password=Lacrosse11
+tasks.max=2
+topics=twitter-word-counts
+key.converter.schemas.enable=false
+auto.evolve=true
+connection.user=TwitterDBWriterUser
+value.converter.schemas.enable=true
+auto.create=true
+value.converter=org.apache.kafka.connect.json.JsonConverter
+connection.url=jdbc:postgresql://db-twitter-analysis.cluster-cyz3w17tswvs.eu-west-2.rds.amazonaws.com:5432/TwitterAnalyticsDB
+insert.mode=upsert
+key.converter=org.apache.kafka.connect.json.JsonConverter
+pk.mode=kafka
+pk.fields=__connect_topic,__connect_partition,__connect_offset
