@@ -20,8 +20,10 @@ import java.util.Properties;
 public class TwitterSentimentAnalyser {
 
     private final JsonParser jsonParser = new JsonParser();
-    private static final int sample = 1000;
     private static final String region = "eu-west-2";
+
+    //ratio of tweets to analyse. because AWS comprehend is expensive.
+    private static final int sample = 10000;
 
     private static final String twitterSentimentCountsSchema =
             "{\"type\": \"struct\"," +
@@ -37,10 +39,10 @@ public class TwitterSentimentAnalyser {
                     " \"optional\": false," +
                     " \"version\": 1," +
                     " \"fields\": [" +
-                    "{ \"field\": \"mixed\", \"type\": \"decimal\", \"optional\": true }, " +
-                    "{ \"field\": \"positive\", \"type\": \"decimal\", \"optional\": true }, " +
-                    "{ \"field\": \"neutral\", \"type\": \"decimal\", \"optional\": true }, " +
-                    "{ \"field\": \"negative\", \"type\": \"decimal\", \"optional\": true }, " +
+                    "{ \"field\": \"Positive\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Negative\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Neutral\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Mixed\", \"type\": \"double\", \"optional\": true }, " +
                     "{ \"field\": \"tweet\", \"type\": \"string\", \"optional\": true }, " +
                     "{ \"field\": \"sentiment\", \"type\": \"string\", \"optional\": true }, " +
                     "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }]}";
@@ -57,14 +59,12 @@ public class TwitterSentimentAnalyser {
     public Topology createTopology() {
         StreamsBuilder builder = new StreamsBuilder();
 
-        //consume the tweets topic and filter a random sample (for cost purposes)
-        KStream<String, String> rawTwitterStream = builder.stream("tweets", Consumed.with(Serdes.String(), Serdes.String()))
-                .filter((k,v) -> (int) (Math.random() * sample) == 1);
+        KStream<String, String> rawTweets = builder.stream("tweets");
 
-        //perform sentiment analysis on the sample. return the tweet alongside the sentiment results
-        KStream<String, KeyValue<Tweet, DetectSentimentResult>> twitterSentiment = rawTwitterStream
-                //parse each message as a tweet object
-                .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject(), Tweet.class))
+        //consume the tweets topic and filter a random sample (for cost purposes)
+        KStream<String, KeyValue<Tweet, DetectSentimentResult>> twitterSentiment = rawTweets
+                .filter((k,v) -> (int) (Math.random() * sample) == 1)
+                .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject().get("payload"), Tweet.class))
                 //retrieve sentiment score from AWS comprehend client.
                 //return key value of tweet and sentiment so additional analysis / comparisons can be made between the tweet info and the sentiment results
                 .mapValues(tweet -> new KeyValue<>(tweet, getSentimentAnalysis(tweet.tweetText)));
@@ -73,7 +73,9 @@ public class TwitterSentimentAnalyser {
         //SINK 1: Format the output with all details of the sentiment analysis for full drill down
         ///////////
         twitterSentiment
+                //format as flat format for kafka connect jdbc sink
                 .mapValues(tweetDetails -> formatTweetWithSentiment(tweetDetails.key,tweetDetails.value,true, true).toString())
+                //add schema
                 .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentDetailSchema))
                 .to("twittersentimentdetail");
 
@@ -126,6 +128,7 @@ public class TwitterSentimentAnalyser {
     //call to AWS Comprehend service to get sentiment
     //format of output https://docs.aws.amazon.com/comprehend/latest/dg/how-sentiment.html
     public DetectSentimentResult getSentimentAnalysis (String tweetText) {
+        System.out.println("tweet analysed: " + tweetText);
         DetectSentimentRequest detectSentimentRequest = new DetectSentimentRequest().withText(tweetText).withLanguageCode("en");
         return comprehendClient.detectSentiment(detectSentimentRequest);
     }

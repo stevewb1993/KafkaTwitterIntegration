@@ -32,8 +32,8 @@ public class TwitterWordCounter {
         StreamsBuilder builder = new StreamsBuilder();
 
 
-        KStream<String, String> textLines = builder.stream("tweets");
-        KTable<String, Long> wordCounts = textLines
+        KStream<String, String> rawTweets = builder.stream("tweets");
+        KTable<String, Long> wordCounts = rawTweets
                 //parse each tweet as a tweet object
                 .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject().get("payload"), Tweet.class))
                 //map each tweet object to a list of json objects, each of which containing a word from the tweet and the date of the tweet

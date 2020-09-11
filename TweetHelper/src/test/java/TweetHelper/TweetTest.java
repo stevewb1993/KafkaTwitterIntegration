@@ -21,9 +21,9 @@ class TweetText {
     void formattedDate() throws ParseException {
 
 
-
         //ARRANGE
         JsonParser jsonParser = new JsonParser();
+        SimpleDateFormat shortDateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 
         ////get example tweet and parse into tweet class
         String tweetFileLocation = "src\\test\\java\\TweetHelper\\exampleTweet.txt";
@@ -33,7 +33,7 @@ class TweetText {
         String expectedDate = "2020-08-10" ;
 
         //act
-        String actualDate = testTweet.formattedDate();
+        String actualDate = testTweet.formattedDate(shortDateFormatter);
 
         //asset
         Assert.assertTrue(actualDate.equals(expectedDate));

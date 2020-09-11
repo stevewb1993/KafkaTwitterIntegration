@@ -1,7 +1,7 @@
 connector.class=io.confluent.connect.jdbc.JdbcSinkConnector
 connection.password=
 tasks.max=2
-topics=twitter-word-counts
+topics=twitter-word-counts,twittersentimentdetail
 key.converter.schemas.enable=false
 auto.evolve=true
 connection.user=TwitterDBWriterUser
