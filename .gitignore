@@ -3,3 +3,4 @@
 /env.list
 /kafka-streams-wordcount/target/
 /TweetHelper/target/
+/kafka-streams-sentiment/target/

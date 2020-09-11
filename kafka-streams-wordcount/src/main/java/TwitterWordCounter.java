@@ -3,6 +3,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import TweetHelper.Tweet;
@@ -25,26 +26,24 @@ import org.apache.kafka.streams.kstream.*;
 
 public class TwitterWordCounter {
 
-
     private final JsonParser jsonParser = new JsonParser();
-
 
     public Topology createTopology(){
         StreamsBuilder builder = new StreamsBuilder();
 
 
-        KStream<String, String> textLines = builder.stream("raw-twitter");
+        KStream<String, String> textLines = builder.stream("tweets");
         KTable<String, Long> wordCounts = textLines
                 //parse each tweet as a tweet object
-                .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject(), Tweet.class))
+                .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject().get("payload"), Tweet.class))
                 //map each tweet object to a list of json objects, each of which containing a word from the tweet and the date of the tweet
                 .flatMapValues(TwitterWordCounter::tweetWordDateMapper)
-                .mapValues(x -> x.toString())
+                .mapValues(JsonElement::toString)
                 //update the key so it matches the word-date combination so we can do a groupBy and count instances
                 .selectKey((key, wordDate) -> wordDate.toString())
                 .groupByKey()
                 .count(Materialized.as("Counts"));
-                //.mapValues(value -> value.toString());
+        //.mapValues(value -> value.toString());
 
         /*
             In order to structure the data so that it can be ingested into SQL, the value of each item in the stream must be straightforward: property, value
@@ -68,9 +67,6 @@ public class TwitterWordCounter {
 
     public static void main(String[] args) {
 
-        //String currentDirectory = System.getProperty("user.dir");
-        //System.out.println("The current working directory is " + currentDirectory);
-
         Properties config = new Properties();
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafka-streams-word-counter");
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "35.178.180.144:9092");
@@ -90,13 +86,15 @@ public class TwitterWordCounter {
 
     //this method is used for taking a tweet and transforming it to a representation of the words in it plus the date
     public static List<JsonObject> tweetWordDateMapper(Tweet tweet) {
+        SimpleDateFormat shortDateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+
         try{
 
             List<String> words = Arrays.asList(tweet.tweetText.toLowerCase().split("\\W+"));
             List<JsonObject> tweetsJson = new ArrayList<JsonObject>();
             for(String word: words) {
                 JsonObject tweetJson = new JsonObject();
-                tweetJson.add("date", new JsonPrimitive(tweet.formattedDate().toString()));
+                tweetJson.add("date", new JsonPrimitive(tweet.formattedDate(shortDateFormatter)));
                 tweetJson.add("word", new JsonPrimitive(word));
                 tweetsJson.add(tweetJson);
             }
@@ -111,34 +109,33 @@ public class TwitterWordCounter {
 
     }
 
+    //after aggregation of the stream, the value of the msg only includes the count.
+    //this helper function adds back in the sentiment and date (format required for jdbc sink)
     public String MapValuesToIncludeColumnData(String key, Long countOfWord) {
         JsonObject jkey = jsonParser.parse(key).getAsJsonObject();
         jkey.addProperty("count", countOfWord); //new JsonPrimitive(count));
         return jkey.toString();
     }
 
+    //add schema to the payload so messages can be read by kafka connect
     public String addSchemaToKafkaPayload(String payload) {
         JsonObject fullMessage = new JsonObject();
 
         //add payload
-        JsonObject jPayload = jsonParser.parse(payload).getAsJsonObject();
-        fullMessage.add("payload", jPayload);
-
+        fullMessage.add("payload", jsonParser.parse(payload).getAsJsonObject());
         //add schema
-        try {
-            fullMessage.add("schema", jsonParser.parse(readFile("kafka-streams-wordcount//schema.txt", StandardCharsets.UTF_8)).getAsJsonObject());
-        } catch (IOException e) {
-            e.printStackTrace();
+        String schema =
+                "{\"type\": \"struct\"," +
+                        " \"optional\": false," +
+                        " \"version\": 1," +
+                        " \"fields\": [" +
+                        "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }, " +
+                        "{ \"field\": \"word\", \"type\": \"string\", \"optional\": true }, " +
+                        "{ \"field\": \"count\", \"type\": \"int64\", \"optional\": true }]}";
 
-        }
+        fullMessage.add("schema", jsonParser.parse(schema).getAsJsonObject());
 
         return fullMessage.toString();
-    }
-
-    static String readFile(String path, Charset encoding) throws IOException
-    {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, encoding);
     }
 
 }

@@ -1,0 +1,15 @@
+connector.class=io.confluent.connect.jdbc.JdbcSinkConnector
+connection.password=
+tasks.max=2
+topics=twittersentiment
+key.converter.schemas.enable=false
+auto.evolve=true
+connection.user=TwitterDBWriterUser
+value.converter.schemas.enable=true
+auto.create=true
+value.converter=org.apache.kafka.connect.json.JsonConverter
+connection.url=
+insert.mode=upsert
+key.converter=org.apache.kafka.connect.json.JsonConverter
+pk.mode=kafka
+pk.fields=__connect_topic,__connect_partition,__connect_offset

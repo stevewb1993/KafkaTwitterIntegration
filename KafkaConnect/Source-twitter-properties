@@ -1,0 +1,13 @@
+connector.class=com.eneco.trading.kafka.connect.twitter.TwitterSourceConnector
+twitter.token=
+tasks.max=1
+topics=raw-twitter
+twitter.secret=
+track.terms=coronavirus
+language=en
+key.converter.schemas.enable=true
+value.converter.schemas.enable=true
+twitter.consumersecret=
+value.converter=org.apache.kafka.connect.json.JsonConverter
+key.converter=org.apache.kafka.connect.json.JsonConverter
+twitter.consumerkey=
