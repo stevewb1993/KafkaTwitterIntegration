@@ -19,6 +19,33 @@ import jdk.nashorn.internal.parser.JSONParser;
 public class Tweet implements Serializable
 {
 
+    public int wordCount() {
+        return this.tweetText.split(" ").length;
+    }
+
+    public String formattedDate(SimpleDateFormat requiredFormat) throws ParseException {
+
+        String tweetAPIDateFormat = "EEE MMM d HH:mm:ss Z yyyy"; //"E MMMM dd HH:mm:ss zzz yyyy";
+        String shortDateFormat = "yyyy-MM-dd";
+
+        SimpleDateFormat  twitterAPIDateFormatter = new SimpleDateFormat(tweetAPIDateFormat, Locale.ENGLISH);
+        SimpleDateFormat  shortDateFormatter = new SimpleDateFormat(shortDateFormat);
+        try {
+            Date parsedDate = twitterAPIDateFormatter.parse(this.createdAt);
+            return requiredFormat.format(parsedDate);
+        } catch (ParseException e) {
+            //gets the current date in the correct format if we can't get it from the tweet
+            return requiredFormat.format(new Date(System.currentTimeMillis()));
+        }
+    }
+
+
+    public JsonObject serialize() {
+        Gson gson = new Gson();
+        String tweetString = gson.toJson(this);
+        return new JsonParser().parse(tweetString).getAsJsonObject();
+    }
+
     @SerializedName("created_at")
     @Expose
     public String createdAt;
@@ -110,11 +137,11 @@ public class Tweet implements Serializable
 
     /**
      * No args constructor for use in serialization
-     * 
+     *
      */
 
     /**
-     * 
+     *
      * @param inReplyToUserId
      * @param source
      * @param filterLevel
@@ -178,34 +205,7 @@ public class Tweet implements Serializable
         this.timestampMs = timestampMs;
     }
 
-    public int wordCount() {
-        return this.tweetText.split(" ").length;
-    }
 
-    public String formattedDate() throws ParseException {
-
-        String tweetAPIDateFormat = "EEE MMM d HH:mm:ss Z yyyy"; //"E MMMM dd HH:mm:ss zzz yyyy";
-        String shortDateFormat = "yyyy-MM-dd";
-
-        SimpleDateFormat  twitterAPIDateFormatter = new SimpleDateFormat(tweetAPIDateFormat, Locale.ENGLISH);
-        SimpleDateFormat  shortDateFormatter = new SimpleDateFormat(shortDateFormat);
-        try {
-            Date parsedDate = twitterAPIDateFormatter.parse(this.createdAt);
-            //twitterAPIDateFormatter.applyPattern(shortDateFormat);
-            //Date formattedDate = shortDateFormatter.parse(twitterAPIDateFormatter.format(parsedDate));
-            return shortDateFormatter.format(parsedDate);//.format(formattedDate);
-        } catch (ParseException e) {
-            //gets the current date in the correct format if we can't get it from the tweet
-            return shortDateFormatter.format(new Date(System.currentTimeMillis()));
-        }
-    }
-
-
-    public JsonObject serialize() {
-        Gson gson = new Gson();
-        String tweetString = gson.toJson(this);
-        return new JsonParser().parse(tweetString).getAsJsonObject();
-    }
 
 
 }
