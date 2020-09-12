@@ -23,7 +23,8 @@ public class TwitterSentimentAnalyser {
     private static final String region = "eu-west-2";
 
     //ratio of tweets to analyse. because AWS comprehend is expensive.
-    private static final int sample = 10000;
+    private static final int sample = 10;
+    private static final int minimumFollowers = 1000;
 
     private static final String twitterSentimentCountsSchema =
             "{\"type\": \"struct\"," +
@@ -61,10 +62,11 @@ public class TwitterSentimentAnalyser {
 
         KStream<String, String> rawTweets = builder.stream("tweets");
 
-        //consume the tweets topic and filter a random sample (for cost purposes)
+        //consume the tweets topic and filter a random sample of tweets posted by users with large number of followers (for cost purposes)
         KStream<String, KeyValue<Tweet, DetectSentimentResult>> twitterSentiment = rawTweets
-                .filter((k,v) -> (int) (Math.random() * sample) == 1)
                 .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject().get("payload"), Tweet.class))
+                .filter((k,tweet) -> tweet.user.followersCount > minimumFollowers)
+                .filter((k,tweet) -> (int) (Math.random() * sample) == 1)
                 //retrieve sentiment score from AWS comprehend client.
                 //return key value of tweet and sentiment so additional analysis / comparisons can be made between the tweet info and the sentiment results
                 .mapValues(tweet -> new KeyValue<>(tweet, getSentimentAnalysis(tweet.tweetText)));
