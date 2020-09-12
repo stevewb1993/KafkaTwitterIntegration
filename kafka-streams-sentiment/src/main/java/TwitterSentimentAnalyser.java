@@ -15,17 +15,22 @@ import com.amazonaws.services.comprehend.model.DetectSentimentRequest;
 import com.amazonaws.services.comprehend.model.DetectSentimentResult;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Properties;
+import java.util.*;
 
 public class TwitterSentimentAnalyser {
 
     private final JsonParser jsonParser = new JsonParser();
+
+    //settings for AWS Comprehend connection
     private static final String region = "eu-west-2";
+    private static final AWSCredentialsProvider awsCreds = DefaultAWSCredentialsProviderChain.getInstance();
+    private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);
 
     //ratio of tweets to analyse. because AWS comprehend is expensive.
     private static final int sample = 10;
     private static final int minimumFollowers = 1000;
 
+    //schemas for output topics
     private static final String twitterSentimentCountsSchema =
             "{\"type\": \"struct\"," +
                     " \"optional\": false," +
@@ -48,35 +53,28 @@ public class TwitterSentimentAnalyser {
                     "{ \"field\": \"sentiment\", \"type\": \"string\", \"optional\": true }, " +
                     "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }]}";
 
-
-    //create credentials and client for sentiment analysis
-    private static final AWSCredentialsProvider awsCreds = DefaultAWSCredentialsProviderChain.getInstance();
-    private static final AmazonComprehend comprehendClient =
-            AmazonComprehendClientBuilder.standard()
-                    .withCredentials(awsCreds)
-                    .withRegion(region)
-                    .build();
-
     public Topology createTopology() {
         StreamsBuilder builder = new StreamsBuilder();
 
         KStream<String, String> rawTweets = builder.stream("tweets");
 
-        //consume the tweets topic and filter a random sample of tweets posted by users with large number of followers (for cost purposes)
+        //consume the tweets topic and perform sentiment analysis
+        // note: filtered for a random sample of tweets posted by users with large number of followers (for cost purposes)
         KStream<String, KeyValue<Tweet, DetectSentimentResult>> twitterSentiment = rawTweets
                 .mapValues(tweetString -> new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject().get("payload"), Tweet.class))
                 .filter((k,tweet) -> tweet.user.followersCount > minimumFollowers)
                 .filter((k,tweet) -> (int) (Math.random() * sample) == 1)
                 //retrieve sentiment score from AWS comprehend client.
                 //return key value of tweet and sentiment so additional analysis / comparisons can be made between the tweet info and the sentiment results
-                .mapValues(tweet -> new KeyValue<>(tweet, getSentimentAnalysis(tweet.tweetText)));
+                .mapValues(tweet -> new KeyValue<>(tweet, sentimentAnalysisHelper.getSentimentAnalysis(tweet.tweetText)));
+
 
         ///////////
         //SINK 1: Format the output with all details of the sentiment analysis for full drill down
         ///////////
         twitterSentiment
-                //format as flat format for kafka connect jdbc sink
-                .mapValues(tweetDetails -> formatTweetWithSentiment(tweetDetails.key,tweetDetails.value,true, true).toString())
+                //parse the tweet and ALL sentiment details into a flat json as required for Kafka Connect JDBC sink
+                .mapValues(tweetDetails -> sentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value))
                 //add schema
                 .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentDetailSchema))
                 .to("twittersentimentdetail");
@@ -85,9 +83,10 @@ public class TwitterSentimentAnalyser {
         //SINK 2: extract the overall sentiment score and perform a count for analysis
         ///////////
         //perform aggregation count of the overall sentiment results (positive, negative, neutral, mixed), grouped by date and hour
+        List<String> requiredProperties = Arrays.asList("overallSentiment", "date");
         KTable<String, Long> twitterSentimentCount = twitterSentiment
-                //retrieve date and final sentiment score of tweet and parse as a flat json format
-                .mapValues(tweetDetails -> formatTweetWithSentiment(tweetDetails.key,tweetDetails.value,false, false))
+                //parse the tweet and required sentiment details into a flat json as required for Kafka Connect JDBC sink
+                .mapValues(tweetDetails -> sentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, requiredProperties))
                 //convert to string to avoid issues with Serdes (fix this later)
                 .mapValues(JsonElement::toString)
                 //change the key to facilitate group by
@@ -127,62 +126,19 @@ public class TwitterSentimentAnalyser {
 
     }
 
-    //call to AWS Comprehend service to get sentiment
-    //format of output https://docs.aws.amazon.com/comprehend/latest/dg/how-sentiment.html
-    public DetectSentimentResult getSentimentAnalysis (String tweetText) {
-        System.out.println("tweet analysed: " + tweetText);
-        DetectSentimentRequest detectSentimentRequest = new DetectSentimentRequest().withText(tweetText).withLanguageCode("en");
-        return comprehendClient.detectSentiment(detectSentimentRequest);
-    }
-
-    //helper function to format the key date and sentiment data into flat json format that can be parsed by kafka connect jdbc sink
-    //options are included for whether to include the detail of the sentiment analysis result as well as the tweet text
-    public JsonObject formatTweetWithSentiment (Tweet tweet, DetectSentimentResult tweetSentiment, Boolean includeSentimentDetail, Boolean includeTweetText) {
-
-        //we  need to get the date of the tweet at the hour level so we can average the sentiment
-        String tweetDate;
-        SimpleDateFormat shortDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH");
-        try {
-            tweetDate = tweet.formattedDate(shortDateFormatter);
-        } catch (ParseException e) {
-            tweetDate = "unknown date";
-        }
-
-        //create json to add the results to
-        JsonObject tweetSentimentResultWithDate = new JsonObject();
-
-        //add sentiment detail if required
-        if(includeSentimentDetail) {
-            tweetSentimentResultWithDate = jsonParser.parse(tweetSentiment.getSentimentScore().toString()).getAsJsonObject();
-        }
-        //add tweet text if required
-        if(includeTweetText) {
-            tweetSentimentResultWithDate.addProperty("tweet", tweet.tweetText);
-        }
-
-        //add overall sentiment result
-        tweetSentimentResultWithDate.addProperty("sentiment", tweetSentiment.getSentiment());
-
-        //add the date
-        tweetSentimentResultWithDate.addProperty("date", tweetDate);
-
-        return tweetSentimentResultWithDate;
-
-    }
-
     //after aggregation of the stream, the value of the msg only includes the count.
     //this helper function adds back in the sentiment and date (format required for jdbc sink)
-    public String MapValuesToIncludeColumnData(String key, Long countOfWord) {
+    public JsonObject MapValuesToIncludeColumnData(String key, Long countOfWord) {
         JsonObject jkey = jsonParser.parse(key).getAsJsonObject();
         jkey.addProperty("count", countOfWord); //new JsonPrimitive(count));
-        return jkey.toString();
+        return jkey;
     }
 
     //add schema to the payload so messages can be read by kafka connect
-    public String addSchemaToKafkaPayload(String payload, String schema) {
+    public String addSchemaToKafkaPayload(JsonObject payload, String schema) {
         JsonObject fullMessage = new JsonObject();
         //add payload
-        fullMessage.add("payload", jsonParser.parse(payload).getAsJsonObject());
+        fullMessage.add("payload", payload);
         //add schema
         fullMessage.add("schema", jsonParser.parse(schema).getAsJsonObject());
         return fullMessage.toString();
