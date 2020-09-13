@@ -1,10 +1,8 @@
 
 package TweetHelper;
 import java.io.Serializable;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Locale;
 
@@ -13,7 +11,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import jdk.nashorn.internal.parser.JSONParser;
 
 
 public class Tweet implements Serializable
@@ -51,7 +48,7 @@ public class Tweet implements Serializable
     public String createdAt;
     @SerializedName("id")
     @Expose
-    public Integer id;
+    public Long id;
     @SerializedName("id_str")
     @Expose
     public String idStr;
@@ -172,7 +169,7 @@ public class Tweet implements Serializable
      * @param favoriteCount
      * @param timestampMs
      */
-    public Tweet(String createdAt, Integer id, String idStr, String text, String source, Boolean truncated, Object inReplyToStatusId, Object inReplyToStatusIdStr, Object inReplyToUserId, Object inReplyToUserIdStr, Object inReplyToScreenName, User user, Object geo, Object coordinates, Object place, Object contributors, RetweetedStatus retweetedStatus, Boolean isQuoteStatus, Integer quoteCount, Integer replyCount, Integer retweetCount, Integer favoriteCount, Entities_ entities, Boolean favorited, Boolean retweeted, Boolean possiblySensitive, String filterLevel, String lang, String timestampMs) {
+    public Tweet(String createdAt, Long id, String idStr, String text, String source, Boolean truncated, Object inReplyToStatusId, Object inReplyToStatusIdStr, Object inReplyToUserId, Object inReplyToUserIdStr, Object inReplyToScreenName, User user, Object geo, Object coordinates, Object place, Object contributors, RetweetedStatus retweetedStatus, Boolean isQuoteStatus, Integer quoteCount, Integer replyCount, Integer retweetCount, Integer favoriteCount, Entities_ entities, Boolean favorited, Boolean retweeted, Boolean possiblySensitive, String filterLevel, String lang, String timestampMs) {
         super();
         this.createdAt = createdAt;
         this.id = id;

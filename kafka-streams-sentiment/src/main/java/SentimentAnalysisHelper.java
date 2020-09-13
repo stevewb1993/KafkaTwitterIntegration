@@ -33,6 +33,7 @@ public class SentimentAnalysisHelper {
     //call to AWS Comprehend service to get sentiment
     //format of output https://docs.aws.amazon.com/comprehend/latest/dg/how-sentiment.html
     public DetectSentimentResult getSentimentAnalysis(String tweetText) {
+        System.out.println("analysing tweet: " + tweetText);
         DetectSentimentRequest detectSentimentRequest = new DetectSentimentRequest().withText(tweetText).withLanguageCode("en");
         return comprehendClient.detectSentiment(detectSentimentRequest);
     }
@@ -61,15 +62,15 @@ public class SentimentAnalysisHelper {
         }
         //add overall sentiment result
         if(propertiesList.contains("overallSentiment")) {
-            sentimentAndTweetDetails.addProperty("sentiment", tweetSentiment.getSentiment());
+            sentimentAndTweetDetails.addProperty("overallSentiment", tweetSentiment.getSentiment());
         }
         //add tweet text
         if(propertiesList.contains("tweetText")) {
-            sentimentAndTweetDetails.addProperty("tweet", tweet.tweetText);
+            sentimentAndTweetDetails.addProperty("tweetText", tweet.tweetText);
         }
         //add tweet id
         if(propertiesList.contains("tweetID")) {
-            sentimentAndTweetDetails.addProperty("tweetID", tweet.idStr);
+            sentimentAndTweetDetails.addProperty("tweetID", tweet.id);
         }
         //add number of followers
         if(propertiesList.contains("followers")) {

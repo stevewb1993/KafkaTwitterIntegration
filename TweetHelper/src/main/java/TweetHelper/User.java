@@ -10,7 +10,7 @@ public class User implements Serializable
 
     @SerializedName("id")
     @Expose
-    public Integer id;
+    public Long id;
     @SerializedName("id_str")
     @Expose
     public String idStr;
@@ -176,7 +176,7 @@ public class User implements Serializable
      * @param notifications
      * @param followRequestSent
      */
-    public User(Integer id, String idStr, String name, String screenName, String location, Object url, String description, String translatorType, Boolean _protected, Boolean verified, Integer followersCount, Integer friendsCount, Integer listedCount, Integer favouritesCount, Integer statusesCount, String createdAt, Object utcOffset, Object timeZone, Boolean geoEnabled, Object lang, Boolean contributorsEnabled, Boolean isTranslator, String profileBackgroundColor, String profileBackgroundImageUrl, String profileBackgroundImageUrlHttps, Boolean profileBackgroundTile, String profileLinkColor, String profileSidebarBorderColor, String profileSidebarFillColor, String profileTextColor, Boolean profileUseBackgroundImage, String profileImageUrl, String profileImageUrlHttps, String profileBannerUrl, Boolean defaultProfile, Boolean defaultProfileImage, Object following, Object followRequestSent, Object notifications) {
+    public User(Long id, String idStr, String name, String screenName, String location, Object url, String description, String translatorType, Boolean _protected, Boolean verified, Integer followersCount, Integer friendsCount, Integer listedCount, Integer favouritesCount, Integer statusesCount, String createdAt, Object utcOffset, Object timeZone, Boolean geoEnabled, Object lang, Boolean contributorsEnabled, Boolean isTranslator, String profileBackgroundColor, String profileBackgroundImageUrl, String profileBackgroundImageUrlHttps, Boolean profileBackgroundTile, String profileLinkColor, String profileSidebarBorderColor, String profileSidebarFillColor, String profileTextColor, Boolean profileUseBackgroundImage, String profileImageUrl, String profileImageUrlHttps, String profileBannerUrl, Boolean defaultProfile, Boolean defaultProfileImage, Object following, Object followRequestSent, Object notifications) {
         super();
         this.id = id;
         this.idStr = idStr;

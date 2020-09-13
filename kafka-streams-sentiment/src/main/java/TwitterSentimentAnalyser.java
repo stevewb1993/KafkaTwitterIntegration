@@ -27,7 +27,7 @@ public class TwitterSentimentAnalyser {
     private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);
 
     //ratio of tweets to analyse. because AWS comprehend is expensive.
-    private static final int sample = 10;
+    private static final int sample = 100;
     private static final int minimumFollowers = 1000;
 
     //schemas for output topics
@@ -37,7 +37,7 @@ public class TwitterSentimentAnalyser {
                     " \"version\": 1," +
                     " \"fields\": [" +
                     "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }, " +
-                    "{ \"field\": \"sentiment\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
                     "{ \"field\": \"count\", \"type\": \"int64\", \"optional\": true }]}";
 
     private static final String twitterSentimentDetailSchema =
@@ -49,8 +49,11 @@ public class TwitterSentimentAnalyser {
                     "{ \"field\": \"Negative\", \"type\": \"double\", \"optional\": true }, " +
                     "{ \"field\": \"Neutral\", \"type\": \"double\", \"optional\": true }, " +
                     "{ \"field\": \"Mixed\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"tweet\", \"type\": \"string\", \"optional\": true }, " +
-                    "{ \"field\": \"sentiment\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"tweetText\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"userID\", \"type\": \"string\", \"optional\": true }, " +
                     "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }]}";
 
     public Topology createTopology() {
