@@ -111,7 +111,7 @@ public class Tweet implements Serializable
     public Integer favoriteCount;
     @SerializedName("entities")
     @Expose
-    public Entities_ entities;
+    public Entities entities;
     @SerializedName("favorited")
     @Expose
     public Boolean favorited;
@@ -169,7 +169,7 @@ public class Tweet implements Serializable
      * @param favoriteCount
      * @param timestampMs
      */
-    public Tweet(String createdAt, Long id, String idStr, String text, String source, Boolean truncated, Object inReplyToStatusId, Object inReplyToStatusIdStr, Object inReplyToUserId, Object inReplyToUserIdStr, Object inReplyToScreenName, User user, Object geo, Object coordinates, Object place, Object contributors, RetweetedStatus retweetedStatus, Boolean isQuoteStatus, Integer quoteCount, Integer replyCount, Integer retweetCount, Integer favoriteCount, Entities_ entities, Boolean favorited, Boolean retweeted, Boolean possiblySensitive, String filterLevel, String lang, String timestampMs) {
+    public Tweet(String createdAt, Long id, String idStr, String text, String source, Boolean truncated, Object inReplyToStatusId, Object inReplyToStatusIdStr, Object inReplyToUserId, Object inReplyToUserIdStr, Object inReplyToScreenName, User user, Object geo, Object coordinates, Object place, Object contributors, RetweetedStatus retweetedStatus, Boolean isQuoteStatus, Integer quoteCount, Integer replyCount, Integer retweetCount, Integer favoriteCount, Entities entities, Boolean favorited, Boolean retweeted, Boolean possiblySensitive, String filterLevel, String lang, String timestampMs) {
         super();
         this.createdAt = createdAt;
         this.id = id;
