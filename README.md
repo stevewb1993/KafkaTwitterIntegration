@@ -11,3 +11,7 @@ The project makes use of standard Kafka architecture. Kafka Connect is used as t
 
 
 ![Image of architecture](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/KafkaTwitterIntegration%20diagram.svg)
+
+## Items to work on
+
+- Dockerfiles are currently built using fat jars. Ideally the build should be completed within docker and image should be built using multiple layers to avoid such large images
