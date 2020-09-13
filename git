@@ -1,0 +1,22 @@
+[1mdiff --git a/kafka-streams-sentiment/src/main/java/TwitterSentimentAnalyser.java b/kafka-streams-sentiment/src/main/java/TwitterSentimentAnalyser.java[m
+[1mindex 9c5d167..b7ef854 100644[m
+[1m--- a/kafka-streams-sentiment/src/main/java/TwitterSentimentAnalyser.java[m
+[1m+++ b/kafka-streams-sentiment/src/main/java/TwitterSentimentAnalyser.java[m
+[36m@@ -27,7 +27,7 @@[m [mpublic class TwitterSentimentAnalyser {[m
+     private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);[m
+ [m
+     //ratio of tweets to analyse. because AWS comprehend is expensive.[m
+[31m-    private static final int sample = 100;[m
+[32m+[m[32m    private static final int sample = 10000;[m
+     private static final int minimumFollowers = 1000;[m
+ [m
+     //schemas for output topics[m
+[36m@@ -53,7 +53,7 @@[m [mpublic class TwitterSentimentAnalyser {[m
+                     "{ \"field\": \"tweetText\", \"type\": \"string\", \"optional\": true }, " +[m
+                     "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +[m
+                     "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +[m
+[31m-                    "{ \"field\": \"userID\", \"type\": \"string\", \"optional\": true }, " +[m
+[32m+[m[32m                    "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +[m
+                     "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }]}";[m
+ [m
+     public Topology createTopology() {[m

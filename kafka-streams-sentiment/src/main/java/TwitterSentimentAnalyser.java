@@ -27,7 +27,7 @@ public class TwitterSentimentAnalyser {
     private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);
 
     //ratio of tweets to analyse. because AWS comprehend is expensive.
-    private static final int sample = 100;
+    private static final int sample = 10000;
     private static final int minimumFollowers = 1000;
 
     //schemas for output topics
@@ -53,7 +53,7 @@ public class TwitterSentimentAnalyser {
                     "{ \"field\": \"tweetText\", \"type\": \"string\", \"optional\": true }, " +
                     "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +
                     "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +
-                    "{ \"field\": \"userID\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +
                     "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }]}";
 
     public Topology createTopology() {
