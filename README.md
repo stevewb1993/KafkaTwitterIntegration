@@ -12,6 +12,18 @@ The project makes use of standard Kafka architecture. Kafka Connect is used as t
 
 ![Image of architecture](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/KafkaTwitterIntegration%20diagram.svg)
 
+## Details of streams applications
+### Sentiment Analysis
+
+- A sample of tweets is picked out based on the number of followers of the user and a call is made to the AWS Comprehend Service for Sentiment Analysis. Based on this, two output streams are created.
+  - Detail of each tweet and associated sentiment results (KStream)
+  - An aggregation by date and the overall sentiment of the tweets (KTable)
+
+### Word Count
+- All tweets are analysed and an aggregation is performed to show the number of occurences of every word used each hour of each day. Based on this, people interested in particular terms will be able to see how the frequency of the term is changing over time.
+
+
 ## Items to work on
 
-- Dockerfiles are currently built using fat jars. Ideally the build should be completed within docker and image should be built using multiple layers to avoid such large images
+- Dockerfiles are currently built using fat jars. Ideally the build should be completed within docker and the image should be built using multiple layers to avoid such large images
+- Addition of a Spark Streaming Application for analysis processed twitter data
