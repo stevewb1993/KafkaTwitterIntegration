@@ -1,6 +1,6 @@
 # Kafka Twitter Integration
 
-This project streams coronavirus tweets from twitter for analysis. The analysis currently includes:
+This project streams Covid-19 tweets from twitter for analysis. The analysis currently includes:
 
 - Sentiment analysis using AWS Comprehend of tweets by users with a large number of followers. 
 - Word counts for showing how language being used in tweets is changing over time.
