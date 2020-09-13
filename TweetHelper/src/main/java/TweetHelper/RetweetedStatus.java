@@ -43,7 +43,7 @@ public class RetweetedStatus implements Serializable
     public Object inReplyToScreenName;
     @SerializedName("user")
     @Expose
-    public TweetHelper.User_ user;
+    public TweetHelper.User user;
     @SerializedName("geo")
     @Expose
     public Object geo;
@@ -128,7 +128,7 @@ public class RetweetedStatus implements Serializable
      * @param retweetCount
      * @param favoriteCount
      */
-    public RetweetedStatus(String createdAt, Integer id, String idStr, String text, String source, Boolean truncated, Object inReplyToStatusId, Object inReplyToStatusIdStr, Object inReplyToUserId, Object inReplyToUserIdStr, Object inReplyToScreenName, TweetHelper.User_ user, Object geo, Object coordinates, Object place, Object contributors, Boolean isQuoteStatus, Integer quoteCount, Integer replyCount, Integer retweetCount, Integer favoriteCount, TweetHelper.Entities entities, Boolean favorited, Boolean retweeted, Boolean possiblySensitive, String filterLevel, String lang) {
+    public RetweetedStatus(String createdAt, Integer id, String idStr, String text, String source, Boolean truncated, Object inReplyToStatusId, Object inReplyToStatusIdStr, Object inReplyToUserId, Object inReplyToUserIdStr, Object inReplyToScreenName, TweetHelper.User user, Object geo, Object coordinates, Object place, Object contributors, Boolean isQuoteStatus, Integer quoteCount, Integer replyCount, Integer retweetCount, Integer favoriteCount, TweetHelper.Entities entities, Boolean favorited, Boolean retweeted, Boolean possiblySensitive, String filterLevel, String lang) {
         super();
         this.createdAt = createdAt;
         this.id = id;
