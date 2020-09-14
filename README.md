@@ -20,7 +20,7 @@ The project makes use of standard Kafka architecture. Kafka Connect is used as t
   - An aggregation by date and the overall sentiment of the tweets (KTable)
 
 ### Word Count
-- All tweets are analysed and an aggregation is performed to show the number of occurences of every word used each hour of each day. Based on this, people interested in particular terms will be able to see how the frequency of the term is changing over time.
+- All tweets are analysed and an aggregation is performed to show the number of occurences of every word used each hour of each day. Based on this, people interested in particular terms will be able to see how the frequency of the term is changing over time. Commonly used 'Stop words' are removed in the database layer using the NLTK list. 
 
 
 ## Items to work on
