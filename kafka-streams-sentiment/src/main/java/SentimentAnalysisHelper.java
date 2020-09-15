@@ -4,16 +4,13 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.codecommit.model.ActorDoesNotExistException;
 import com.amazonaws.services.comprehend.AmazonComprehend;
 import com.amazonaws.services.comprehend.AmazonComprehendClientBuilder;
-import com.amazonaws.services.comprehend.model.DetectSentimentRequest;
-import com.amazonaws.services.comprehend.model.DetectSentimentResult;
+import com.amazonaws.services.comprehend.model.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class SentimentAnalysisHelper {
 
@@ -41,6 +38,8 @@ public class SentimentAnalysisHelper {
     //helper function to format the key date and sentiment data into flat json format that can be parsed by kafka connect jdbc sink
     //options are included for whether to include the detail of the sentiment analysis result as well as the tweet text
     public static JsonObject formatTweetWithSentiment(Tweet tweet, DetectSentimentResult tweetSentiment, List<String> propertiesList) {
+
+        System.out.println(tweet.id);
         //validate requested data
         HashSet<String> validProperties = new HashSet<>(Arrays.asList(
                 "sentimentDetail"
@@ -105,6 +104,31 @@ public class SentimentAnalysisHelper {
                 , "userID"
                 , "date");
 
+
         return formatTweetWithSentiment(tweet, tweetSentiment, propertiesList);
+    }
+
+    public DetectEntitiesResult detectEntities(String tweetText) {
+        DetectEntitiesRequest detectEntitiesRequest = new DetectEntitiesRequest().withText(tweetText)
+                .withLanguageCode("en");
+        DetectEntitiesResult detectEntitiesResult  = comprehendClient.detectEntities(detectEntitiesRequest);
+        return detectEntitiesResult;
+    }
+
+    public List<JsonObject> addEntitiesToSentimentResult (Tweet tweet, DetectSentimentResult sentimentResult) {
+
+        DetectEntitiesResult entities = detectEntities(tweet.tweetText);
+        JsonObject tweetWithSentiment = formatTweetWithSentiment(tweet, sentimentResult);
+
+        List<JsonObject> entitiesWithSentiment = new ArrayList<JsonObject>();
+        for (Entity entity: entities.getEntities()) {
+            JsonObject singleEntityWithTweetSentiment = tweetWithSentiment;
+            singleEntityWithTweetSentiment.addProperty("Entity", entity.getText());
+            singleEntityWithTweetSentiment.addProperty("Score", entity.getScore());
+            singleEntityWithTweetSentiment.addProperty("Type", entity.getType());
+            entitiesWithSentiment.add(singleEntityWithTweetSentiment);
+        }
+        return entitiesWithSentiment;
+
     }
 }

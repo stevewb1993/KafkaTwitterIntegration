@@ -17,7 +17,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class TwitterSentimentAnalyser {
+public class TwitterSentimentStream {
 
     private final JsonParser jsonParser = new JsonParser();
 
@@ -27,7 +27,7 @@ public class TwitterSentimentAnalyser {
     private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);
 
     //ratio of tweets to analyse. because AWS comprehend is expensive.
-    private static final int sample = 100000;
+    private static final int sample = 30000;
     private static final int minimumFollowers = 1000;
 
     //schemas for output topics
@@ -56,6 +56,26 @@ public class TwitterSentimentAnalyser {
                     "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +
                     "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }]}";
 
+    private static final String twitterSentimentWithEntitiesSchema =
+            "{\"type\": \"struct\"," +
+                    " \"optional\": false," +
+                    " \"version\": 1," +
+                    " \"fields\": [" +
+                    "{ \"field\": \"Positive\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Negative\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Neutral\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Mixed\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"tweetText\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }" +
+                    "{ \"field\": \"Entity\", \"type\": \"string\", \"optional\": true }" +
+                    "{ \"field\": \"Score\", \"type\": \"double\", \"optional\": true }" +
+                    "{ \"field\": \"Type\", \"type\": \"string\", \"optional\": true }" +
+                    "]}";
+
     public Topology createTopology() {
         StreamsBuilder builder = new StreamsBuilder();
 
@@ -82,8 +102,20 @@ public class TwitterSentimentAnalyser {
                 .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentDetailSchema))
                 .to("twittersentimentdetail");
 
+
+
         ///////////
-        //SINK 2: extract the overall sentiment score and perform a count for analysis
+        //SINK 2: Extract the entities from the text alongside the previous sentiment scores
+        ///////////
+        twitterSentiment
+                //parse the tweet and ALL sentiment and entity details into a flat json as required for Kafka Connect JDBC sink
+                .flatMapValues(tweetDetails -> sentimentAnalysisHelper.addEntitiesToSentimentResult(tweetDetails.key,tweetDetails.value))
+                //add schema
+                .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentWithEntitiesSchema))
+                .to("TwitterSentimentWithEntities");
+
+        ///////////
+        //SINK 3: extract the overall sentiment score and perform a count for analysis
         ///////////
         //perform aggregation count of the overall sentiment results (positive, negative, neutral, mixed), grouped by date and hour
         List<String> requiredProperties = Arrays.asList("overallSentiment", "date");
@@ -113,15 +145,15 @@ public class TwitterSentimentAnalyser {
     public static void main(String[] args) {
 
         Properties config = new Properties();
-        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafka-streams-sentiment");
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafkasentiment");
         config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "35.178.180.144:9092");
         config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        TwitterSentimentAnalyser twitterSentimentAnalyser = new TwitterSentimentAnalyser();
+        TwitterSentimentStream twitterSentimentStream = new TwitterSentimentStream();
 
-        KafkaStreams streams = new KafkaStreams(twitterSentimentAnalyser.createTopology(), config);
+        KafkaStreams streams = new KafkaStreams(twitterSentimentStream.createTopology(), config);
         streams.start();
 
         // shutdown hook to correctly close the streams application
