@@ -83,7 +83,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>TwitterSentimentAnalyser</mainClass>
+                            <mainClass>TwitterSentimentStream</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

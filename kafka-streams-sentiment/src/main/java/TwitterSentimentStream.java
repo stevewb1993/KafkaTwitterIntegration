@@ -27,7 +27,7 @@ public class TwitterSentimentStream {
     private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);
 
     //ratio of tweets to analyse. because AWS comprehend is expensive.
-    private static final int sample = 30000;
+    private static final int sample = 10;
     private static final int minimumFollowers = 1000;
 
     //schemas for output topics
@@ -70,11 +70,10 @@ public class TwitterSentimentStream {
                     "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +
                     "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +
                     "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +
-                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }" +
-                    "{ \"field\": \"Entity\", \"type\": \"string\", \"optional\": true }" +
-                    "{ \"field\": \"Score\", \"type\": \"double\", \"optional\": true }" +
-                    "{ \"field\": \"Type\", \"type\": \"string\", \"optional\": true }" +
-                    "]}";
+                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }," +
+                    "{ \"field\": \"Entity\", \"type\": \"string\", \"optional\": true }," +
+                    "{ \"field\": \"Score\", \"type\": \"double\", \"optional\": true }," +
+                    "{ \"field\": \"Type\", \"type\": \"string\", \"optional\": true }]}";
 
     public Topology createTopology() {
         StreamsBuilder builder = new StreamsBuilder();
@@ -97,7 +96,8 @@ public class TwitterSentimentStream {
         ///////////
         twitterSentiment
                 //parse the tweet and ALL sentiment details into a flat json as required for Kafka Connect JDBC sink
-                .mapValues(tweetDetails -> sentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value))
+                //format date to ISO8601 standard
+                .mapValues(tweetDetails -> sentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, new SimpleDateFormat("yyyy-MM-dd'T'H:mm:ss'Z'")))
                 //add schema
                 .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentDetailSchema))
                 .to("twittersentimentdetail");
@@ -109,7 +109,7 @@ public class TwitterSentimentStream {
         ///////////
         twitterSentiment
                 //parse the tweet and ALL sentiment and entity details into a flat json as required for Kafka Connect JDBC sink
-                .flatMapValues(tweetDetails -> sentimentAnalysisHelper.addEntitiesToSentimentResult(tweetDetails.key,tweetDetails.value))
+                .flatMapValues(tweetDetails -> sentimentAnalysisHelper.addEntitiesToSentimentResult(tweetDetails.key,tweetDetails.value, new SimpleDateFormat("yyyy-MM-dd'T'H:mm:ss'Z'")))
                 //add schema
                 .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentWithEntitiesSchema))
                 .to("TwitterSentimentWithEntities");
@@ -121,7 +121,8 @@ public class TwitterSentimentStream {
         List<String> requiredProperties = Arrays.asList("overallSentiment", "date");
         KTable<String, Long> twitterSentimentCount = twitterSentiment
                 //parse the tweet and required sentiment details into a flat json as required for Kafka Connect JDBC sink
-                .mapValues(tweetDetails -> sentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, requiredProperties))
+                //format date to ISO8601 standard
+                .mapValues(tweetDetails -> sentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, requiredProperties,new SimpleDateFormat("yyyy-MM-dd HH")))
                 //convert to string to avoid issues with Serdes (fix this later)
                 .mapValues(JsonElement::toString)
                 //change the key to facilitate group by

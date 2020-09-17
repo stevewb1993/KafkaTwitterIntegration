@@ -37,7 +37,7 @@ public class SentimentAnalysisHelper {
 
     //helper function to format the key date and sentiment data into flat json format that can be parsed by kafka connect jdbc sink
     //options are included for whether to include the detail of the sentiment analysis result as well as the tweet text
-    public static JsonObject formatTweetWithSentiment(Tweet tweet, DetectSentimentResult tweetSentiment, List<String> propertiesList) {
+    public static JsonObject formatTweetWithSentiment(Tweet tweet, DetectSentimentResult tweetSentiment, List<String> propertiesList, SimpleDateFormat dateFormatter) {
 
         System.out.println(tweet.id);
         //validate requested data
@@ -83,9 +83,9 @@ public class SentimentAnalysisHelper {
         if(propertiesList.contains("date")) {
             //we  need to get the date of the tweet at the hour level so we can average the sentiment
             String tweetDate;
-            SimpleDateFormat shortDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH");
+            //SimpleDateFormat shortDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH");
             try {
-                tweetDate = tweet.formattedDate(shortDateFormatter);
+                tweetDate = tweet.formattedDate(dateFormatter);
             } catch (ParseException e) {
                 tweetDate = "unknown date";
             }
@@ -94,7 +94,7 @@ public class SentimentAnalysisHelper {
         return sentimentAndTweetDetails;
     }
 
-    public static JsonObject formatTweetWithSentiment(Tweet tweet, DetectSentimentResult tweetSentiment) {
+    public static JsonObject formatTweetWithSentiment(Tweet tweet, DetectSentimentResult tweetSentiment, SimpleDateFormat dateFormatter) {
         List<String> propertiesList = Arrays.asList(
                 "sentimentDetail"
                 , "overallSentiment"
@@ -104,8 +104,7 @@ public class SentimentAnalysisHelper {
                 , "userID"
                 , "date");
 
-
-        return formatTweetWithSentiment(tweet, tweetSentiment, propertiesList);
+        return formatTweetWithSentiment(tweet, tweetSentiment, propertiesList, dateFormatter);
     }
 
     public DetectEntitiesResult detectEntities(String tweetText) {
@@ -115,10 +114,10 @@ public class SentimentAnalysisHelper {
         return detectEntitiesResult;
     }
 
-    public List<JsonObject> addEntitiesToSentimentResult (Tweet tweet, DetectSentimentResult sentimentResult) {
+    public List<JsonObject> addEntitiesToSentimentResult (Tweet tweet, DetectSentimentResult sentimentResult, SimpleDateFormat dateFormatter) {
 
         DetectEntitiesResult entities = detectEntities(tweet.tweetText);
-        JsonObject tweetWithSentiment = formatTweetWithSentiment(tweet, sentimentResult);
+        JsonObject tweetWithSentiment = formatTweetWithSentiment(tweet, sentimentResult, dateFormatter);
 
         List<JsonObject> entitiesWithSentiment = new ArrayList<JsonObject>();
         for (Entity entity: entities.getEntities()) {
