@@ -27,7 +27,7 @@ public class TwitterSentimentStream {
     private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);
 
     //ratio of tweets to analyse. because AWS comprehend is expensive.
-    private static final int sample = 10;
+    private static final int sample = 1000;
     private static final int minimumFollowers = 1000;
 
     //schemas for output topics
