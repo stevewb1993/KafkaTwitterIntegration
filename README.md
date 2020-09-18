@@ -9,7 +9,7 @@ This project streams Covid-19 tweets from twitter for analysis. The analysis cur
 
 The project makes use of standard Kafka architecture. Kafka Connect is used as the source connector for streaming the data from twitter, and as the sink connector for sending the analysed data into Postgres. Kafka Streams is used for the analysis as it is streamed.
 
-Once the data has been persisted in the database, aggregated analysis is completed both in Spark.
+Once the data has been persisted in the database, aggregated analysis is completed using Spark.
 
 ![Image of architecture](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/KafkaTwitterIntegration%20diagram.svg)
 
