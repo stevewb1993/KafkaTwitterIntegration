@@ -26,56 +26,7 @@ public class TwitterSentimentStream {
     private static final AWSCredentialsProvider awsCreds = DefaultAWSCredentialsProviderChain.getInstance();
     private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);
 
-    //ratio of tweets to analyse. because AWS comprehend is expensive.
-    private static final int sample = 1000;
-    private static final int minimumFollowers = 1000;
-
-    //schemas for output topics
-    private static final String twitterSentimentCountsSchema =
-            "{\"type\": \"struct\"," +
-                    " \"optional\": false," +
-                    " \"version\": 1," +
-                    " \"fields\": [" +
-                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }, " +
-                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
-                    "{ \"field\": \"count\", \"type\": \"int64\", \"optional\": true }]}";
-
-    private static final String twitterSentimentDetailSchema =
-            "{\"type\": \"struct\"," +
-                    " \"optional\": false," +
-                    " \"version\": 1," +
-                    " \"fields\": [" +
-                    "{ \"field\": \"Positive\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"Negative\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"Neutral\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"Mixed\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
-                    "{ \"field\": \"tweetText\", \"type\": \"string\", \"optional\": true }, " +
-                    "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +
-                    "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +
-                    "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +
-                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }]}";
-
-    private static final String twitterSentimentWithEntitiesSchema =
-            "{\"type\": \"struct\"," +
-                    " \"optional\": false," +
-                    " \"version\": 1," +
-                    " \"fields\": [" +
-                    "{ \"field\": \"Positive\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"Negative\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"Neutral\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"Mixed\", \"type\": \"double\", \"optional\": true }, " +
-                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
-                    "{ \"field\": \"tweetText\", \"type\": \"string\", \"optional\": true }, " +
-                    "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +
-                    "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +
-                    "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +
-                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }," +
-                    "{ \"field\": \"Entity\", \"type\": \"string\", \"optional\": true }," +
-                    "{ \"field\": \"Score\", \"type\": \"double\", \"optional\": true }," +
-                    "{ \"field\": \"Type\", \"type\": \"string\", \"optional\": true }]}";
-
-    public Topology createTopology() {
+    public Topology createTopology(int minimumFollowers, int sample) {
         StreamsBuilder builder = new StreamsBuilder();
 
         KStream<String, String> rawTweets = builder.stream("tweets");
@@ -152,9 +103,30 @@ public class TwitterSentimentStream {
         config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
+        //ratio of tweets to analyse. because AWS comprehend is expensive.
+        int minimumFollowers = 1000; //default value
+        int sample = 1000; //default value
+        if (args.length == 2){
+            try{
+                minimumFollowers = Integer.parseInt(args[0]);
+                sample = Integer.parseInt(args[1]);
+            }
+            catch (Exception e) {
+                System.out.println("arguments must be integers. first min followers, then sample to analyse.");
+                System.exit(0);
+            }
+        }
+        else if (args.length!=0) {
+            System.out.println("must provide 2 or 0 parameters. first min followers, then sample to analyse.");
+            System.exit(0);
+        }
+
+        System.out.println("minimum followers: " + minimumFollowers);
+        System.out.println("ratio for analysis: " + sample);
+
         TwitterSentimentStream twitterSentimentStream = new TwitterSentimentStream();
 
-        KafkaStreams streams = new KafkaStreams(twitterSentimentStream.createTopology(), config);
+        KafkaStreams streams = new KafkaStreams(twitterSentimentStream.createTopology(minimumFollowers, sample), config);
         streams.start();
 
         // shutdown hook to correctly close the streams application
@@ -179,4 +151,51 @@ public class TwitterSentimentStream {
         fullMessage.add("schema", jsonParser.parse(schema).getAsJsonObject());
         return fullMessage.toString();
     }
+
+
+    //schemas for output topics
+    private static final String twitterSentimentCountsSchema =
+            "{\"type\": \"struct\"," +
+                    " \"optional\": false," +
+                    " \"version\": 1," +
+                    " \"fields\": [" +
+                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"count\", \"type\": \"int64\", \"optional\": true }]}";
+
+    private static final String twitterSentimentDetailSchema =
+            "{\"type\": \"struct\"," +
+                    " \"optional\": false," +
+                    " \"version\": 1," +
+                    " \"fields\": [" +
+                    "{ \"field\": \"Positive\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Negative\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Neutral\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Mixed\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"tweetText\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }]}";
+
+    private static final String twitterSentimentWithEntitiesSchema =
+            "{\"type\": \"struct\"," +
+                    " \"optional\": false," +
+                    " \"version\": 1," +
+                    " \"fields\": [" +
+                    "{ \"field\": \"Positive\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Negative\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Neutral\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"Mixed\", \"type\": \"double\", \"optional\": true }, " +
+                    "{ \"field\": \"overallSentiment\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"tweetText\", \"type\": \"string\", \"optional\": true }, " +
+                    "{ \"field\": \"tweetID\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"userFollowers\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"userID\", \"type\": \"int64\", \"optional\": true }, " +
+                    "{ \"field\": \"date\", \"type\": \"string\", \"optional\": true }," +
+                    "{ \"field\": \"Entity\", \"type\": \"string\", \"optional\": true }," +
+                    "{ \"field\": \"Score\", \"type\": \"double\", \"optional\": true }," +
+                    "{ \"field\": \"Type\", \"type\": \"string\", \"optional\": true }]}";
+
 }
