@@ -9,12 +9,12 @@
         <module name="kafka-streams-wordcount" />
         <module name="kafka-streams-sentiment" />
         <module name="TweetHelper" />
-        <module name="kafka-producer-twittertweets" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
       <module name="kafka-connect-twitter" target="1.5" />
       <module name="Kafka-Producer-Twitter" target="1.8" />
+      <module name="kafka-producer-twittertweets" target="1.8" />
       <module name="kafka-twitter-ElasticSearchConsumer" target="8" />
     </bytecodeTargetLevel>
   </component>

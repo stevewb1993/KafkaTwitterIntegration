@@ -1,1 +1,0 @@
-kafka-topics --zookeeper 35.178.180.144:2181 --create --topic tweets --partitions 4 --replication-factor 1

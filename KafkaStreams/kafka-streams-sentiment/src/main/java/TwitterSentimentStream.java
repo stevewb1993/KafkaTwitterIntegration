@@ -9,11 +9,8 @@ import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.services.comprehend.AmazonComprehend;
-import com.amazonaws.services.comprehend.AmazonComprehendClientBuilder;
-import com.amazonaws.services.comprehend.model.DetectSentimentRequest;
 import com.amazonaws.services.comprehend.model.DetectSentimentResult;
-import java.text.ParseException;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 

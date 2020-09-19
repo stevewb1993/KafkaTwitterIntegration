@@ -4,3 +4,4 @@
 /kafka-streams-wordcount/target/
 /TweetHelper/target/
 /kafka-streams-sentiment/target/
+/**/target

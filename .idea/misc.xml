@@ -10,6 +10,7 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/kafka-connect-twitter/pom.xml" />
+        <option value="$PROJECT_DIR$/kafka-producer-twittertweets/pom.xml" />
         <option value="$PROJECT_DIR$/kafka-twitter-ElasticSearchConsumer/pom.xml" />
       </set>
     </option>
