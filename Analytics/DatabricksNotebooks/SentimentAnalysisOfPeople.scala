@@ -10,7 +10,7 @@ val jdbcUsername =
 val jdbcPassword =
 val jdbcHostname =
 val jdbcPort = 5432
-val jdbcDatabase = 
+val jdbcDatabase =
 
 // COMMAND ----------
 
