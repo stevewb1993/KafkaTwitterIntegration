@@ -2,7 +2,7 @@
 
 This project streams Covid-19 tweets from twitter for analysis. The analysis currently includes:
 
-- Sentiment analysis using AWS Comprehend of tweets by users with a large number of followers. 
+- Sentiment and entities analysis using AWS Comprehend of tweets by users with a large number of followers. 
 - Word counts for showing how language being used in tweets is changing over time.
 
 ## Architecture
@@ -16,8 +16,9 @@ Once the data has been persisted in the database, aggregated analysis is complet
 ## Details of streams applications
 ### Sentiment Analysis
 
-- A sample of tweets is picked out based on the number of followers of the user and a call is made to the AWS Comprehend Service for Sentiment Analysis. Based on this, two output streams are created.
+- For users who tweet about Covid-19 that have at least 1000 followers, the application selects a random sample to analyse (only a sample is analysed to stay within AWS free tier). The application makes calls to the AWS Comprehend Service for Sentiment  and Entities Analysis. Based on this, three output streams are created.
   - Detail of each tweet and associated sentiment results (KStream)
+  - The above, but also joined with all the entities identified within the tweet (KStream)
   - An aggregation by date and the overall sentiment of the tweets (KTable)
 
 ### Word Count
