@@ -29,7 +29,6 @@ class TweetText {
         String tweetFileLocation = "src\\test\\java\\TweetHelper\\exampleTweet.txt";
         String tweetString = readLineByLine(tweetFileLocation);
         Tweet testTweet = new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject(),Tweet.class);
-        System.out.println(testTweet.id);
 
         String expectedDate = "2020-08-10" ;
 

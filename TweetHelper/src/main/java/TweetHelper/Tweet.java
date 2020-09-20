@@ -32,6 +32,7 @@ public class Tweet implements Serializable
             return requiredFormat.format(parsedDate);
         } catch (ParseException e) {
             //gets the current date in the correct format if we can't get it from the tweet
+            System.out.println("Couldn't extract date so assuming current timestamp of application");
             return requiredFormat.format(new Date(System.currentTimeMillis()));
         }
     }
