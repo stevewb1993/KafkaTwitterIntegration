@@ -45,7 +45,7 @@ public class TwitterSentimentStream {
         twitterSentiment
                 //parse the tweet and ALL sentiment details into a flat json as required for Kafka Connect JDBC sink
                 //format date to ISO8601 standard
-                .mapValues(tweetDetails -> sentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, new SimpleDateFormat("yyyy-MM-dd'T'H:mm:ss'Z'")))
+                .mapValues(tweetDetails -> SentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, new SimpleDateFormat("yyyy-MM-dd'T'H:mm:ss'Z'")))
                 //add schema
                 .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentDetailSchema))
                 .to("twittersentimentdetail");
@@ -70,7 +70,7 @@ public class TwitterSentimentStream {
         KTable<String, Long> twitterSentimentCount = twitterSentiment
                 //parse the tweet and required sentiment details into a flat json as required for Kafka Connect JDBC sink
                 //format date to ISO8601 standard
-                .mapValues(tweetDetails -> sentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, requiredProperties,new SimpleDateFormat("yyyy-MM-dd HH")))
+                .mapValues(tweetDetails -> SentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, requiredProperties,new SimpleDateFormat("yyyy-MM-dd HH")))
                 //convert to string to avoid issues with Serdes (fix this later)
                 .mapValues(JsonElement::toString)
                 //change the key to facilitate group by

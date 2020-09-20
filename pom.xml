@@ -11,10 +11,9 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>kafka-streams-wordcount</module>
+        <module>KafkaStreams/kafka-streams-wordcount</module>
         <module>TweetHelper</module>
-        <module>kafka-producer-twittertweets</module>
-        <module>kafka-streams-sentiment</module>
+        <module>KafkaStreams/kafka-streams-sentiment</module>
     </modules>
 
 
