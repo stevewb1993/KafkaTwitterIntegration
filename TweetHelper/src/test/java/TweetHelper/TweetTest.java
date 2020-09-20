@@ -30,7 +30,7 @@ class TweetText {
         String tweetString = readLineByLine(tweetFileLocation);
         Tweet testTweet = new Gson().fromJson(jsonParser.parse(tweetString).getAsJsonObject(),Tweet.class);
 
-        String expectedDate = "2020-08-10" ;
+        String expectedDate = "2020-09-13" ;
 
         //act
         String actualDate = testTweet.formattedDate(shortDateFormatter);

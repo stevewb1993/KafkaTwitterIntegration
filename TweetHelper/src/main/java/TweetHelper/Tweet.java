@@ -17,18 +17,18 @@ public class Tweet implements Serializable
 {
 
     public int wordCount() {
-        return this.tweetText.split(" ").length;
+        return this.tweetText.split("\\s+").length;
     }
 
     public String formattedDate(SimpleDateFormat requiredFormat) throws ParseException {
 
-        String tweetAPIDateFormat = "EEE MMM d HH:mm:ss Z yyyy"; //"E MMMM dd HH:mm:ss zzz yyyy";
-        String shortDateFormat = "yyyy-MM-dd";
+        String tweetAPIDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; //"E MMMM dd HH:mm:ss zzz yyyy";
 
         SimpleDateFormat  twitterAPIDateFormatter = new SimpleDateFormat(tweetAPIDateFormat, Locale.ENGLISH);
-        SimpleDateFormat  shortDateFormatter = new SimpleDateFormat(shortDateFormat);
         try {
+            System.out.println("tweet date: " + this.createdAt);
             Date parsedDate = twitterAPIDateFormatter.parse(this.createdAt);
+            System.out.println("parsed date of tweet: " + parsedDate);
             return requiredFormat.format(parsedDate);
         } catch (ParseException e) {
             //gets the current date in the correct format if we can't get it from the tweet
