@@ -1,28 +1,23 @@
 import TweetHelper.Tweet;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.services.codecommit.model.ActorDoesNotExistException;
 import com.amazonaws.services.comprehend.AmazonComprehend;
 import com.amazonaws.services.comprehend.AmazonComprehendClientBuilder;
 import com.amazonaws.services.comprehend.model.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class SentimentAnalysisHelper {
+public class AWSComprehendHelper {
 
     private static final JsonParser jsonParser = new JsonParser();
-    private static AWSCredentialsProvider awsCreds;
-    private static AmazonComprehend comprehendClient;
+    private AmazonComprehend comprehendClient;
 
-    public SentimentAnalysisHelper(String region, AWSCredentialsProvider awsCreds) {
-        this.awsCreds = awsCreds;
-        this.comprehendClient =
+    public AWSComprehendHelper(String region, AWSCredentialsProvider awsCredentials) {
+        AmazonComprehend ComprehendClient =
                 AmazonComprehendClientBuilder.standard()
-                        .withCredentials(awsCreds)
+                        .withCredentials(awsCredentials)
                         .withRegion(region)
                         .build();
     }
@@ -36,7 +31,7 @@ public class SentimentAnalysisHelper {
     }
 
     //helper function to format the key date and sentiment data into flat json format that can be parsed by kafka connect jdbc sink
-    //options are included for whether to include the detail of the sentiment analysis result as well as the tweet text
+    //options are available via the properties list for the properties to include in the json
     public static JsonObject formatTweetWithSentiment(Tweet tweet, DetectSentimentResult tweetSentiment, List<String> propertiesList, SimpleDateFormat dateFormatter) {
 
         System.out.println(tweet.id);
@@ -78,7 +73,7 @@ public class SentimentAnalysisHelper {
         //add user id
         if(propertiesList.contains("userID")) {
             sentimentAndTweetDetails.addProperty("userID", tweet.user.id);
-        };
+        }
         //add the date
         if(propertiesList.contains("date")) {
             //we  need to get the date of the tweet at the hour level so we can average the sentiment
@@ -90,10 +85,11 @@ public class SentimentAnalysisHelper {
                 tweetDate = "unknown date";
             }
             sentimentAndTweetDetails.addProperty("date", tweetDate);
-        };
+        }
         return sentimentAndTweetDetails;
     }
 
+    //overload method which returns all available properties of the sentiment analysis and tweet in the flat json
     public static JsonObject formatTweetWithSentiment(Tweet tweet, DetectSentimentResult tweetSentiment, SimpleDateFormat dateFormatter) {
         List<String> propertiesList = Arrays.asList(
                 "sentimentDetail"
@@ -107,13 +103,15 @@ public class SentimentAnalysisHelper {
         return formatTweetWithSentiment(tweet, tweetSentiment, propertiesList, dateFormatter);
     }
 
+    //call to AWS Comprehend service to get list of entities
+    //format of output https://docs.aws.amazon.com/comprehend/latest/dg/how-entities.html
     public DetectEntitiesResult detectEntities(String tweetText) {
         DetectEntitiesRequest detectEntitiesRequest = new DetectEntitiesRequest().withText(tweetText)
                 .withLanguageCode("en");
-        DetectEntitiesResult detectEntitiesResult  = comprehendClient.detectEntities(detectEntitiesRequest);
-        return detectEntitiesResult;
+        return comprehendClient.detectEntities(detectEntitiesRequest);
     }
 
+    //This helper function maps the sentiment result against each entity inside the tweet
     public List<JsonObject> addEntitiesToSentimentResult (Tweet tweet, DetectSentimentResult sentimentResult, SimpleDateFormat dateFormatter) {
 
         DetectEntitiesResult entities = detectEntities(tweet.tweetText);
@@ -128,6 +126,5 @@ public class SentimentAnalysisHelper {
             entitiesWithSentiment.add(singleEntityWithTweetSentiment);
         }
         return entitiesWithSentiment;
-
     }
 }

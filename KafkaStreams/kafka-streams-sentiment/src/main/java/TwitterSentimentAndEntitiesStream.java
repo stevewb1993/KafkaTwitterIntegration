@@ -14,14 +14,14 @@ import com.amazonaws.services.comprehend.model.DetectSentimentResult;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class TwitterSentimentStream {
+public class TwitterSentimentAndEntitiesStream {
 
     private final JsonParser jsonParser = new JsonParser();
 
     //settings for AWS Comprehend connection
     private static final String region = "eu-west-2";
     private static final AWSCredentialsProvider awsCreds = DefaultAWSCredentialsProviderChain.getInstance();
-    private static final SentimentAnalysisHelper sentimentAnalysisHelper = new SentimentAnalysisHelper(region, awsCreds);
+    private static final AWSComprehendHelper comprehendHelper = new AWSComprehendHelper(region, awsCreds);
 
     public Topology createTopology(int minimumFollowers, int sample) {
         StreamsBuilder builder = new StreamsBuilder();
@@ -36,7 +36,7 @@ public class TwitterSentimentStream {
                 .filter((k,tweet) -> (int) (Math.random() * sample) == 1)
                 //retrieve sentiment score from AWS comprehend client.
                 //return key value of tweet and sentiment so additional analysis / comparisons can be made between the tweet info and the sentiment results
-                .mapValues(tweet -> new KeyValue<>(tweet, sentimentAnalysisHelper.getSentimentAnalysis(tweet.tweetText)));
+                .mapValues(tweet -> new KeyValue<>(tweet, comprehendHelper.getSentimentAnalysis(tweet.tweetText)));
 
 
         ///////////
@@ -45,7 +45,7 @@ public class TwitterSentimentStream {
         twitterSentiment
                 //parse the tweet and ALL sentiment details into a flat json as required for Kafka Connect JDBC sink
                 //format date to ISO8601 standard
-                .mapValues(tweetDetails -> SentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, new SimpleDateFormat("yyyy-MM-dd'T'H:mm:ss'Z'")))
+                .mapValues(tweetDetails -> AWSComprehendHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, new SimpleDateFormat("yyyy-MM-dd'T'H:mm:ss'Z'")))
                 //add schema
                 .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentDetailSchema))
                 .to("twittersentimentdetail");
@@ -57,7 +57,7 @@ public class TwitterSentimentStream {
         ///////////
         twitterSentiment
                 //parse the tweet and ALL sentiment and entity details into a flat json as required for Kafka Connect JDBC sink
-                .flatMapValues(tweetDetails -> sentimentAnalysisHelper.addEntitiesToSentimentResult(tweetDetails.key,tweetDetails.value, new SimpleDateFormat("yyyy-MM-dd'T'H:mm:ss'Z'")))
+                .flatMapValues(tweetDetails -> comprehendHelper.addEntitiesToSentimentResult(tweetDetails.key,tweetDetails.value, new SimpleDateFormat("yyyy-MM-dd'T'H:mm:ss'Z'")))
                 //add schema
                 .mapValues(sentimentResults -> addSchemaToKafkaPayload(sentimentResults,twitterSentimentWithEntitiesSchema))
                 .to("TwitterSentimentWithEntities");
@@ -70,7 +70,7 @@ public class TwitterSentimentStream {
         KTable<String, Long> twitterSentimentCount = twitterSentiment
                 //parse the tweet and required sentiment details into a flat json as required for Kafka Connect JDBC sink
                 //format date to ISO8601 standard
-                .mapValues(tweetDetails -> SentimentAnalysisHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, requiredProperties,new SimpleDateFormat("yyyy-MM-dd HH")))
+                .mapValues(tweetDetails -> AWSComprehendHelper.formatTweetWithSentiment(tweetDetails.key,tweetDetails.value, requiredProperties,new SimpleDateFormat("yyyy-MM-dd HH")))
                 //convert to string to avoid issues with Serdes (fix this later)
                 .mapValues(JsonElement::toString)
                 //change the key to facilitate group by
@@ -121,7 +121,7 @@ public class TwitterSentimentStream {
         System.out.println("minimum followers: " + minimumFollowers);
         System.out.println("ratio for analysis: " + sample);
 
-        TwitterSentimentStream twitterSentimentStream = new TwitterSentimentStream();
+        TwitterSentimentAndEntitiesStream twitterSentimentStream = new TwitterSentimentAndEntitiesStream();
 
         KafkaStreams streams = new KafkaStreams(twitterSentimentStream.createTopology(minimumFollowers, sample), config);
         streams.start();
