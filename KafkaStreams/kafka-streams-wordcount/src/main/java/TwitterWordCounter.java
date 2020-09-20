@@ -40,7 +40,7 @@ public class TwitterWordCounter {
                 .flatMapValues(TwitterWordCounter::tweetWordDateMapper)
                 .mapValues(JsonElement::toString)
                 //update the key so it matches the word-date combination so we can do a groupBy and count instances
-                .selectKey((key, wordDate) -> wordDate.toString())
+                .selectKey((key, wordDate) -> wordDate)
                 .groupByKey()
                 .count(Materialized.as("Counts"));
         //.mapValues(value -> value.toString());
@@ -90,7 +90,7 @@ public class TwitterWordCounter {
 
         try{
 
-            List<String> words = Arrays.asList(tweet.tweetText.toLowerCase().split("\\W+"));
+            String[] words = tweet.tweetText.toLowerCase().split("\\W+");
             List<JsonObject> tweetsJson = new ArrayList<JsonObject>();
             for(String word: words) {
                 JsonObject tweetJson = new JsonObject();
