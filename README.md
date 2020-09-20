@@ -22,9 +22,3 @@ Once the data has been persisted in the database, aggregated analysis is complet
 
 ### Word Count
 - All tweets are analysed and an aggregation is performed to show the number of occurences of every word used each hour of each day. Based on this, people interested in particular terms will be able to see how the frequency of the term is changing over time. Commonly used 'Stop words' are removed in the database layer using the NLTK list. 
-
-
-## Items to work on
-
-- Dockerfiles are currently built using fat jars. Ideally the build should be completed within docker and the image should be built using multiple layers to avoid such large images
-- Addition of a Spark Streaming Application for analysis processed twitter data
