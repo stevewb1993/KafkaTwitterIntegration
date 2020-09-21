@@ -16,10 +16,12 @@ Once the data has been persisted in the database, aggregated analysis is complet
 ## Details of streams applications
 ### Sentiment Analysis
 
-- For users who tweet about Covid-19 that have at least 1000 followers, the application selects a random sample to analyse (only a sample is analysed to stay within AWS free tier). The application makes calls to the AWS Comprehend Service for Sentiment  and Entities Analysis. Based on this, three output streams are created.
-  - Detail of each tweet and associated sentiment results (KStream)
+- For users who tweet about Covid-19 that have at least 1000 followers, the application selects a random sample to analyse using AWS Comprehend (only a sample is analysed to stay within AWS free tier). Based on this, three output streams are created.
+  - Detail of each tweet and associated sentiment results (KStream), as well as an aggregation by date and the overall sentiment of the tweets (KTable). This facilitates:
+    - Showing how overall sentiment is trending
+    - Analysis of whether particular characteristics of a user (number of followers, location, etc) are associated with positive or negative sentiment
   - The above, but also joined with all the entities identified within the tweet (KStream)
-  - An aggregation by date and the overall sentiment of the tweets (KTable)
+    - This facilitates showing how sentiment is trending for particular entities, such as high profile individuals or organisations
 
 ### Word Count
 - All tweets are analysed and an aggregation is performed to show the number of occurences of every word used each hour of each day. Based on this, people interested in particular terms will be able to see how the frequency of the term is changing over time. Commonly used 'Stop words' are removed in the database layer using the NLTK list. 
