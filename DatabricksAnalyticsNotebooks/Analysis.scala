@@ -45,7 +45,7 @@ val twitterEntitiesAggDF = twitterEntitiesWithDateDF
 	.groupBy("entity","overallSentiment","type","tweetDate")
 	.count()
 
-display(twitterEntitiesAggDF.orderBy(asc("count")))
+display(twitterEntitiesAggDF.orderBy(desc("count")).limit(20))
 
 // COMMAND ----------
 
