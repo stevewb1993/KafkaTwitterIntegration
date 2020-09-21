@@ -17,8 +17,9 @@ Once the data has been persisted in the database, aggregated analysis is complet
 ### Sentiment Analysis
 
 - For users who tweet about Covid-19 that have at least 1000 followers, the application selects a random sample to analyse using AWS Comprehend (only a sample is analysed to stay within AWS free tier). Based on this, three output streams are created.
-  - Detail of each tweet and associated sentiment results (KStream), as well as an aggregation by date and the overall sentiment of the tweets (KTable)
-    - This facilitates showing how overall sentiment is trending
+  - Detail of each tweet and associated sentiment results (KStream), as well as an aggregation by date and the overall sentiment of the tweets (KTable). This facilitates:
+    - Showing how overall sentiment is trending
+    - Analysis of whether particular characteristics of a user (number of followers, location, etc) are associated with positive or negative sentiment
   - The above, but also joined with all the entities identified within the tweet (KStream)
     - This facilitates showing how sentiment is trending for particular entities, such as high profile individuals or organisations
 
