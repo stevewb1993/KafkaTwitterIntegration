@@ -32,20 +32,43 @@ connectionProperties.put("password", s"${jdbcPassword}")
 //get data from the database
 val query = "(select * from public.vw_twitter_sentiment_with_entities) as TwitterSentimentWithEntities"
 val twitterEntitiesDF = spark.read.jdbc(jdbcUrl, query, connectionProperties)
-//add overall date to help with aggregation
-val twitterEntitiesWithDateDF = twitterEntitiesDF.withColumn("tweetDate",twitterEntitiesDF.col("tweettimestamp").cast("date"))
+
+//function for cleaning entities
+val cleanEntities = (entity: String) => {
+	val cleanEntity = {
+		//change to lower case
+		val lowerEntity: String = entity.toLowerCase();
+		//check if there's a leading hashtag. if true, remove it
+		if (lowerEntity(0) =='#')
+			lowerEntity.reverse.substring(1).reverse
+		else
+			lowerEntity
+	}
+	cleanEntity
+}
+val cleanEntitiesUDF = spark.udf.register("cleanEntities",cleanEntities)
+
+//Perform some cleaning on the data to help with analysis
+val twitterEntitiesDFCleaned = twitterEntitiesDF
+	//create a column with just the date (rather than timestamp) to help with aggregation use cases
+	.withColumn("tweetDate",twitterEntitiesDF.col("tweettimestamp").cast("date"))
+	//clean the identified entities
+	.withColumn("entityCleaned",cleanEntitiesUDF(col("entity")))
+
 
 //Analysis of entities identied as People and the sentiment towards them
-val twitterEntitiesAggDF = twitterEntitiesWithDateDF
+val twitterEntitiesAggDF = twitterEntitiesDFCleaned
 	//filter for people
 	.filter($"type" === "PERSON")
 	//remove neutral sentiment to make results clearer
 	.filter($"overallSentiment" =!= "NEUTRAL")
-	//aggregate
-	.groupBy("entity","overallSentiment","type","tweetDate")
-	.count()
+	//aggregate sentiment for each individual
+	.groupBy("entityCleaned","overallSentiment","type","tweetDate")
+	.agg(count("overallSentiment").alias("entitySentimentCount"))
+	//window aggregation used for sorting the diagram for entities with most analysis overall
+	.withColumn("totalEntityCount", sum("entitySentimentCount") over Window.partitionBy("entityCleaned"))
 
-display(twitterEntitiesAggDF.orderBy(desc("count")).limit(20))
+display(twitterEntitiesAggDF.orderBy(desc("totalEntityCount")).limit(40))
 
 // COMMAND ----------
 
