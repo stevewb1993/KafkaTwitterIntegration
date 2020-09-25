@@ -60,8 +60,6 @@ val twitterEntitiesDFCleaned = twitterEntitiesDF
 val twitterEntitiesAggDF = twitterEntitiesDFCleaned
 	//filter for people
 	.filter($"type" === "PERSON")
-	//remove neutral sentiment to make results clearer
-	.filter($"overallSentiment" =!= "NEUTRAL")
 	//aggregate sentiment for each individual
 	.groupBy("entityCleaned","overallSentiment","type","tweetDate")
 	.agg(count("overallSentiment").alias("entitySentimentCount"))
