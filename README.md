@@ -20,14 +20,14 @@ Once the data has been persisted in the database, aggregated analysis is complet
   - Detail of each tweet and associated sentiment results (KStream), as well as an aggregation by date and the overall sentiment of the tweets (KTable). This facilitates:
     - Showing how overall sentiment is trending
     - Analysis of whether particular characteristics of a user (number of followers, location, etc) are associated with positive or negative sentiment
-    ![Sentiment Over Time:](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/DatabricksAnalyticsNotebooks\Plots\sentimentOverTime.png)
+    ![Sentiment Over Time:](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/DatabricksAnalyticsNotebooks/Plots/sentimentOverTime.png)
   
   - The above, but also joined with all the entities identified within the tweet (KStream)
     - This facilitates showing how sentiment is trending for particular entities, such as high profile individuals or organisations
     
     Analysis of entities identified as people in tweets and the associated sentiment of the tweet:
-    ![Analysis of entities identified as people in tweets and the associated sentiment of the tweet:](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/DatabricksAnalyticsNotebooks\Plots\entitySentiment.png)
+    ![Analysis of entities identified as people in tweets and the associated sentiment of the tweet:](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/DatabricksAnalyticsNotebooks/Plots/entitySentiment.png)
 
 ### Word Count
 - All tweets are analysed and an aggregation is performed to show the number of occurences of every word used each hour of each day. Based on this, people interested in particular terms will be able to see how the frequency of the term is changing over time. Commonly used 'Stop words' are removed in the database layer using the NLTK list. 
-![Total Word Counts:](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/DatabricksAnalyticsNotebooks\Plots\wordCount.png)
+![Total Word Counts:](https://github.com/stevewb1993/KafkaTwitterIntegration/blob/master/DatabricksAnalyticsNotebooks/Plots/wordCount.png)
